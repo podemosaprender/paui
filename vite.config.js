@@ -48,14 +48,12 @@ export default defineConfig({
 		comlink(),
 		splitVendorChunkPlugin(),
 		VitePWA({
-			registerType: 'prompt',
+			strategies: 'injectManifest',
+			registerType: 'autoUpdate',
 			injectRegister: false,
+			pwaAssets: { disabled: false, config: true, }, //A: use asset generator
 
-			pwaAssets: {
-				disabled: false,
-				config: true,
-			},
-
+			//SEE: https://developer.chrome.com/docs/capabilities/web-apis/web-share-target#sample_applications
 			manifest: { //A: pwa manifest template HERE
 				name: 'PAUI',
 				short_name: 'PAUI',

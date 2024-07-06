@@ -67,18 +67,10 @@ export default defineConfig({
 					"enctype": "multipart/form-data",
 					"params": {
 						"files": [
-							{
-								"name": "textFiles",
-								"accept": ["text/plain", ".txt"]
-							},
-							{
-								"name": "htmlFiles",
-								"accept": ["text/html", ".html"]
-							},
-							{
-								"name": "images",
-								"accept": ["image/jpeg", "image/png", "image/webp", "image/gif"]
-							}
+							{ "name": "textFiles", "accept": ["text/plain", ".txt"] },
+							{ "name": "htmlFiles", "accept": ["text/html", ".html"] },
+							{ "name": "pdfFiles", "accept": ["application/pdf", ".pdf"] },
+							{ "name": "images", "accept": ["image/jpeg", "image/png", "image/webp", "image/gif"] }
 						]
 					}
 				}

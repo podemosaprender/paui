@@ -65,13 +65,15 @@ export default defineConfig({
 					"action": "/share-file-handler",
 					"method": "POST",
 					"enctype": "multipart/form-data",
-					"params": {
-						"files": [
-							{ "name": "textFiles", "accept": ["text/plain", ".txt"] },
-							{ "name": "htmlFiles", "accept": ["text/html", ".html"] },
-							{ "name": "pdfFiles", "accept": ["application/pdf", ".pdf"] },
-							{ "name": "images", "accept": ["image/jpeg", "image/png", "image/webp", "image/gif"] }
-						]
+					"params": { //SEE: https://github.com/GoogleChrome/samples/blob/gh-pages/web-share/src/manifest.json
+						"files": [{
+							"name": "media",
+							"accept": [
+								"audio/*",
+								"image/*",
+								"video/*"
+							]
+						}]
 					}
 				}
 			},

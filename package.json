@@ -18,7 +18,6 @@
     "@uiw/react-codemirror": "^4.21.21",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
     "comlink": "^4.4.1",
-    "ethers": "^6.13.1",
     "isomorphic-git": "^1.25.10",
     "primeflex": "^3.3.1",
     "primeicons": "^6.0.1",

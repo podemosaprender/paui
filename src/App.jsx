@@ -10,7 +10,9 @@ import { QRImg } from 'src/components/QRImg';
 import { QRScan } from 'src/components/QRScan';
 
 import { fsp } from './svc/git'
-import { speech_from_text_p } from './svc/speech-from-text'
+import { speech_from_text_p } from 'src/svc/speech-from-text'
+import * as crypto from 'src/svc/crypto';
+window.mycrypto= crypto;
 
 export function App() {
 	const [txt,setTxt]= useState('')

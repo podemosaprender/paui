@@ -61,12 +61,12 @@ export default defineConfig({
 				short_name: 'PAUI',
 				description: 'PAUI',
 				theme_color: '#000000',
-				"share_target": {
-					"action": "/share-file-handler",
-					"method": "POST",
+				share_target: {
+					"action": "/_share-target",
 					"enctype": "multipart/form-data",
-					"params": { //SEE: https://github.com/GoogleChrome/samples/blob/gh-pages/web-share/src/manifest.json
-						"files": [{
+					"method": "POST",
+					"params": {
+						"files": [{ //SEE: https://github.com/GoogleChrome/samples/blob/gh-pages/web-share/src/manifest.json
 							"name": "media",
 							"accept": [
 								"audio/*",
@@ -77,7 +77,6 @@ export default defineConfig({
 					}
 				}
 			},
-
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
 				cleanupOutdatedCaches: true,

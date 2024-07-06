@@ -6,7 +6,6 @@ import {QRGenerateData} from 'src/svc/qr';
 
 export function QRImg({txt, sz}) {
 	const qrdata= QRGenerateData(txt);
-	console.log({qrdata})
 	return (
 		<div>
 			<p>QR TODO {txt}</p>

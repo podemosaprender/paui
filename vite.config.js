@@ -19,6 +19,8 @@ function manualChunks(id) {
 			id.includes('lezer') ? 'vendor-lezer' :
 			id.includes('mirror') ? 'vendor-mirror' :
 			id.includes('git') ? 'vendor-git' :
+			id.includes('ethers') ? 'vendor-ethers' :
+			id.includes('qr-scanner') ? 'vendor-qr-scanner' :
 			'vendor'
 		)
 	}

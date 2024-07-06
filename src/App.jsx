@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 
 import { Editor } from 'src/components/Editor'
 import { QRImg } from 'src/components/QRImg';
+import { QRScan } from 'src/components/QRScan';
 
 import { fsp } from './svc/git'
 import { speech_from_text_p } from './svc/speech-from-text'
@@ -25,6 +26,7 @@ export function App() {
   return (
     <div>
 			<QRImg txt="https://podemosaprender.org" />
+			<QRScan />
 			<Editor value={txt} onChange={onChange}/>
       <PWABadge />
     </div>

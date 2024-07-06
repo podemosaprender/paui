@@ -15,6 +15,7 @@ import * as crypto from 'src/svc/crypto';
 window.mycrypto= crypto;
 
 export function App() {
+	const [view,setView]= useState('');
 	const [txt,setTxt]= useState('')
 
 	useEffect(() => {
@@ -27,9 +28,12 @@ export function App() {
 
   return (
     <div>
-			<QRImg txt="https://podemosaprender.org" />
-			<QRScan />
-			<Editor value={txt} onChange={onChange}/>
+			{ 
+				view=='qrimg' ?  <QRImg txt="https://podemosaprender.org" /> :
+				view=='qrscan' ? <QRScan /> :
+				view=='editor' ? <Editor value={txt} onChange={onChange}/> :
+				<h1>Hola</h1>
+			}
       <PWABadge />
     </div>
   )

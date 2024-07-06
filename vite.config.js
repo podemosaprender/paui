@@ -56,11 +56,32 @@ export default defineConfig({
 				config: true,
 			},
 
-			manifest: {
-				name: 'pwa-tut0',
-				short_name: 'pwa-tut0',
-				description: 'pwa tutorial',
+			manifest: { //A: pwa manifest template HERE
+				name: 'PAUI',
+				short_name: 'PAUI',
+				description: 'PAUI',
 				theme_color: '#000000',
+				"share_target": {
+					"action": "/share-file-handler",
+					"method": "POST",
+					"enctype": "multipart/form-data",
+					"params": {
+						"files": [
+							{
+								"name": "textFiles",
+								"accept": ["text/plain", ".txt"]
+							},
+							{
+								"name": "htmlFiles",
+								"accept": ["text/html", ".html"]
+							},
+							{
+								"name": "images",
+								"accept": ["image/jpeg", "image/png", "image/webp", "image/gif"]
+							}
+						]
+					}
+				}
 			},
 
 			workbox: {
@@ -69,8 +90,8 @@ export default defineConfig({
 				clientsClaim: true,
 			},
 
-			devOptions: {
-				enabled: false,
+			devOptions: { //SEE: https://vite-pwa-org.netlify.app/guide/development.html#type-declarations
+				enabled: true, //A: can install from npm run dev
 				navigateFallback: 'index.html',
 				suppressWarnings: true,
 				type: 'module',

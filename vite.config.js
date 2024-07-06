@@ -60,7 +60,7 @@ export default defineConfig({
 				name: 'PAUI',
 				short_name: 'PAUI',
 				description: 'PAUI',
-				start_url: '/?version=1',
+				start_url: './?version=1',
 				theme_color: '#000000',
 				share_target: {
 					"action": "/_share-target",

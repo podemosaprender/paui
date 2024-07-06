@@ -61,10 +61,10 @@ export default defineConfig({
 				name: 'PAUI',
 				short_name: 'PAUI',
 				description: 'PAUI',
-				start_url: '/paui/?version=1', //A: tiene que ser ABSOLUTA, no ./ para que ande share_target!
+				start_url: '/?version=1', //A: tiene que ser ABSOLUTA, no ./ para que ande share_target!
 				theme_color: '#000000',
 				share_target: {
-					"action": "/paui/_share-target",
+					"action": "/_share-target",
 					"enctype": "multipart/form-data",
 					"method": "POST",
 					"params": {

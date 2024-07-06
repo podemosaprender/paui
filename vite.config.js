@@ -56,11 +56,12 @@ export default defineConfig({
 			//SEE: https://developer.chrome.com/docs/capabilities/web-apis/web-share-target#sample_applications
 			//SEE: https://developer.mozilla.org/en-US/docs/Web/Manifest/file_handlers
 			//SEE: https://developer.mozilla.org/en-US/docs/Web/Manifest/shortcuts
+			//SEE: https://github.com/GoogleChrome/samples/blob/gh-pages/web-share/src/manifest.json
 			manifest: { //A: pwa manifest template HERE
 				name: 'PAUI',
 				short_name: 'PAUI',
 				description: 'PAUI',
-				start_url: './?version=1',
+				start_url: '/paui/?version=1', //A: tiene que ser ABSOLUTA, no ./ para que ande share_target!
 				theme_color: '#000000',
 				share_target: {
 					"action": "/_share-target",
@@ -72,7 +73,8 @@ export default defineConfig({
 							"accept": [
 								"audio/*",
 								"image/*",
-								"video/*"
+								"video/*",
+								"applicaton/pdf"
 							]
 						}]
 					}

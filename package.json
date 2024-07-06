@@ -1,0 +1,48 @@
+{
+  "name": "pwa-tut0",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@isomorphic-git/lightning-fs": "^4.6.0",
+    "@replit/codemirror-vim": "^6.2.1",
+    "@uiw/codemirror-extensions-color": "^4.21.21",
+    "@uiw/codemirror-extensions-langs": "^4.21.21",
+    "@uiw/codemirror-themes-all": "^4.21.21",
+    "@uiw/react-codemirror": "^4.21.21",
+    "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "comlink": "^4.4.1",
+    "isomorphic-git": "^1.25.10",
+    "primeflex": "^3.3.1",
+    "primeicons": "^6.0.1",
+    "primereact": "^10.3.3",
+    "qrcode-generator": "^1.4.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "@vite-pwa/assets-generator": "^0.2.4",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "vite": "^5.2.10",
+    "vite-plugin-comlink": "^4.0.3",
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "vite-plugin-pwa": "^0.20.0",
+    "workbox-core": "^7.1.0"
+  },
+  "NOoverrides": {
+    "sharp": "0.32.6",
+    "sharp-ico": "0.1.5"
+  }
+}

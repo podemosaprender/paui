@@ -1,0 +1,33 @@
+import { useState, useEffect, useCallback } from 'react'
+
+import PWABadge from './PWABadge'
+
+import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+
+import { Editor } from 'src/components/Editor'
+import { QRImg } from 'src/components/QRImg';
+
+import { fsp } from './svc/git'
+import { speech_from_text_p } from './svc/speech-from-text'
+
+export function App() {
+	const [txt,setTxt]= useState('')
+
+	useEffect(() => {
+		fsp.readFile('/xwip.txt','utf8').then( setTxt );
+	}, [])
+
+	const onChange= async (a_txt) => {
+		await fsp.writeFile('/xwip.txt',a_txt);	
+	}
+
+  return (
+    <div>
+			<QRImg txt="https://podemosaprender.org" />
+			<Editor value={txt} onChange={onChange}/>
+      <PWABadge />
+    </div>
+  )
+}
+

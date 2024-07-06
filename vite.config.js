@@ -54,10 +54,13 @@ export default defineConfig({
 			pwaAssets: { disabled: false, config: true, }, //A: use asset generator
 
 			//SEE: https://developer.chrome.com/docs/capabilities/web-apis/web-share-target#sample_applications
+			//SEE: https://developer.mozilla.org/en-US/docs/Web/Manifest/file_handlers
+			//SEE: https://developer.mozilla.org/en-US/docs/Web/Manifest/shortcuts
 			manifest: { //A: pwa manifest template HERE
 				name: 'PAUI',
 				short_name: 'PAUI',
 				description: 'PAUI',
+				start_url: '/?version=1',
 				theme_color: '#000000',
 				share_target: {
 					"action": "/_share-target",

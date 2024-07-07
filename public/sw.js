@@ -37,6 +37,14 @@ const shareTargetHandler = async ({event}) => {
   const mediaFiles = formData.getAll('media');
   const cache = await caches.open(cacheName);
 
+	try {
+		await fsp.init();
+		try { fsp.mkdir('/up') } catch (ex) { console.log("fsp mkdir",ex) } ;
+		console.log("shareTargetHandler fsp init OK");
+	} catch(ex) {
+		console.log("shareTargetHandler fsp init ERROR",ex);
+	}
+
   for (const mediaFile of mediaFiles) {
     // TODO: Instead of bailing, come up with a
     // default name for each possible MIME type.
@@ -57,22 +65,17 @@ const shareTargetHandler = async ({event}) => {
         },
       })
     );
+
+		try {
+			await	fsp.writeFile('/up/'+mediaFile.name, await mediaFile.bytes());
+			console.log("shareTargetHandler fsp",ok)
+		} catch (ex) {
+			console.log("shareTargetHandler fsp",ex)
+		}
+
   }
 
-	try {
-		await fsp.init();
-		try { fsp.mkdir('/up') } catch (ex) { console.log("fsp mkdir",ex) } ;
-		console.log("shareTargetHandler fsp init OK");
-	} catch(ex) {
-		console.log("shareTargetHandler fsp init ERROR",ex);
-	}
 
-	try {
-		await	fsp.writeFile('/up/'+mediaFile.name, await mediaFile.bytes());
-		console.log("shareTargetHandler fsp",ok)
-	} catch (ex) {
-		console.log("shareTargetHandler fsp",ex)
-	}
 
   // Use the MIME type of the first file shared to determine where we redirect.
 	const routeToRedirectTo = null; //XXX: let app decide and inform user

@@ -29,6 +29,9 @@ if ('launchQueue' in window) { console.log('File Handling API is supported!');
 	});
 } else { console.error('File Handling API is not supported!'); }
 
+const ch= new BroadcastChannel('messages')
+ch.onmessage= (...a) => console.log("ch onmsg", a)
+
 export function App() {
 	const [view,setView]= useState('');
 	const [txt,setTxt]= useState('')
@@ -61,7 +64,7 @@ export function App() {
 			<Button label="Refresh" onClick={files_refresh} />
 			<Upload />
 			<ul>
-				{ files.map((name,idx) => <li key={idx}>{name}</li>) }
+				{ files.map((name,idx) => <li key={idx}><a href={'./up/'+name} target='_blank'>{name}</a></li>) }
 			</ul>
 			<PWABadge />
 		</div>

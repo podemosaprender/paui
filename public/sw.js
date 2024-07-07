@@ -92,9 +92,15 @@ const cachedMediaHandler = new CacheOnly({
 });
 
 const uploadedHandler = async ({url, request, event, params}) => {
-	let r= ['EMPTY']; //DFTL
-	try {r= await fsp.readdir('/up');}catch(ex) {console.log("fsp readDir ERROR",ex)}
-  return new Response(r.join('\n'));
+	if (url.pathname.endsWith('/up')) {
+		let r= ['EMPTY']; //DFTL
+		try {r= await fsp.readdir('/up');} catch(ex) {console.log("fsp readDir ERROR",ex)}
+		return new Response(r.join('\n'));
+	} else {
+		let p= (url.pathname.match(/\/up.*/)||[])[0]
+		let f= await fsp.readFile(p);
+		return new Response(f);
+	}
 };
 
 skipWaiting();
@@ -105,6 +111,12 @@ clientsClaim();
 precacheAndRoute(self.__WB_MANIFEST);
 
 //SEE: https://developer.chrome.com/docs/workbox/modules/workbox-routing/#how_to_register_a_regular_expression_route
+const routeDbgCb = ({url, request, event}) => {
+	console.log("FETCH",{url,request});
+  return false;
+};
+
+registerRoute(routeDbgCb,() => {});
 registerRoute( new RegExp('/_share-target'), shareTargetHandler, 'POST');
-registerRoute( new RegExp('/up'), uploadedHandler);
+registerRoute( new RegExp('/up(/.*)?'), uploadedHandler);
 registerRoute( new RegExp(urlPrefix), cachedMediaHandler);

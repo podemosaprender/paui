@@ -20,11 +20,13 @@ export function App() {
 	const [files, setFiles]= useState([]);
 
 	const files_refresh= async () => {try{
-		setFiles(await fsp.readdir('/up'));
+		let l= await fetch('./up').then( res => res.text() )
+		console.log("files_refresh",l)
+		setFiles(l.split('\n'));
 	}catch(ex){alert(ex)}}
 
 	useEffect(() => {
-		fsp.readFile('/xwip.txt','utf8').then( setTxt );
+		fsp.readFile('/xwip.txt','utf8').then( setTxt ).catch( x= console.log("read xwip",x) );
 		files_refresh();
 	}, [])
 
@@ -43,7 +45,7 @@ export function App() {
 			<h3>Files</h3>
 			<Button label="Refresh" onClick={files_refresh} />
 			<ul>
-				{ files.map(name => <li>{name}</li>) }
+				{ files.map((name,idx) => <li key={idx}>{name}</li>) }
 			</ul>
       <PWABadge />
     </div>

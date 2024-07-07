@@ -88,6 +88,12 @@ const cachedMediaHandler = new CacheOnly({
   ],
 });
 
+const uploadedHandler = async ({url, request, event, params}) => {
+	let r= ['EMPTY']; //DFTL
+	try {r= await fsp.readDir('/up');}catch(ex) {console.log("fsp readDir ERROR",ex)}
+  return new Response(r.join('\n'));
+};
+
 skipWaiting();
 clientsClaim();
 
@@ -97,5 +103,5 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 //SEE: https://developer.chrome.com/docs/workbox/modules/workbox-routing/#how_to_register_a_regular_expression_route
 registerRoute( new RegExp('/_share-target'), shareTargetHandler, 'POST');
-
+registerRoute( new RegExp('/up'), uploadedHandler);
 registerRoute( new RegExp(urlPrefix), cachedMediaHandler);

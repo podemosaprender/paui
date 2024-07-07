@@ -67,7 +67,7 @@ const shareTargetHandler = async ({event}) => {
     );
 
 		try {
-			await	fsp.writeFile('/up/'+mediaFile.name, await mediaFile.bytes());
+			await	fsp.writeFile('/up/'+mediaFile.name, mediaFile);
 			console.log("shareTargetHandler fsp",ok)
 		} catch (ex) {
 			console.log("shareTargetHandler fsp",ex)

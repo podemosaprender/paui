@@ -12,7 +12,7 @@ export function Upload() {
 	return (
 		<div className="card flex justify-content-center">
 			<Toast ref={toast}></Toast>
-			<FileUpload mode="basic" name="media[]" url="./_share_target" accept="*/*" maxFileSize={10000000} onUpload={onUpload} auto chooseLabel="Browse" />
+			<FileUpload mode="basic" name="media[]" url="./_share_target" accept="*|*/*" maxFileSize={10000000} onUpload={onUpload} auto chooseLabel="Browse" />
 		</div>  
 	)
 }

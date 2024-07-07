@@ -37,6 +37,7 @@ const shareTargetHandler = async ({event}) => {
   const mediaFiles = formData.getAll('media');
   const cache = await caches.open(cacheName);
 
+	console.log("_share_target");
 	try {
 		await fsp.init();
 		try { fsp.mkdir('/up') } catch (ex) { console.log("fsp mkdir",ex) } ;
@@ -46,9 +47,8 @@ const shareTargetHandler = async ({event}) => {
 	}
 
   for (const mediaFile of mediaFiles) {
-    // TODO: Instead of bailing, come up with a
-    // default name for each possible MIME type.
-    if (!mediaFile.name) {
+		console.log("MEDIA FILE", mediaFile.name);
+    if (!mediaFile.name) { // TODO: come up with a  default name for each possible MIME type.
       if (broadcastChannel) {
         broadcastChannel.postMessage('Sorry! No name found on incoming media.');
       }

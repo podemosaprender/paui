@@ -37,7 +37,7 @@ const shareTargetHandler = async ({event}) => {
   const mediaFiles = formData.getAll('media');
   const cache = await caches.open(cacheName);
 
-	console.log("_share_target");
+	console.log("_share_target",[... formData.keys() ]);
 	try {
 		await fsp.init();
 		try { fsp.mkdir('/up') } catch (ex) { console.log("fsp mkdir",ex) } ;

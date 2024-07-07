@@ -8,6 +8,7 @@ import { InputText } from 'primereact/inputtext';
 import { Editor } from 'src/components/Editor'
 import { QRImg } from 'src/components/QRImg';
 import { QRScan } from 'src/components/QRScan';
+import { Upload } from 'src/components/Upload';
 
 import { fsp } from './svc/git'
 import { speech_from_text_p } from 'src/svc/speech-from-text'
@@ -58,6 +59,7 @@ export function App() {
 			}
 			<h3>Files</h3>
 			<Button label="Refresh" onClick={files_refresh} />
+			<Upload />
 			<ul>
 				{ files.map((name,idx) => <li key={idx}>{name}</li>) }
 			</ul>

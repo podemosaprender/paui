@@ -90,7 +90,7 @@ const cachedMediaHandler = new CacheOnly({
 
 const uploadedHandler = async ({url, request, event, params}) => {
 	let r= ['EMPTY']; //DFTL
-	try {r= await fsp.readDir('/up');}catch(ex) {console.log("fsp readDir ERROR",ex)}
+	try {r= await fsp.readdir('/up');}catch(ex) {console.log("fsp readDir ERROR",ex)}
   return new Response(r.join('\n'));
 };
 

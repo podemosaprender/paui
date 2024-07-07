@@ -4,6 +4,8 @@ import { splitVendorChunkPlugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import { makeManifest, allFileTypesAndMimes } from './manifest.js';
+
 //SEE: https://vitejs.dev/config/server-options.html#server-https
 
 const BasePath= (process.env.GITHUB_REPOSITORY||'').replace(/^[^\/]*/,'') 
@@ -52,39 +54,12 @@ export default defineConfig({
 			registerType: 'autoUpdate',
 			injectRegister: false,
 			pwaAssets: { disabled: false, config: true, }, //A: use asset generator
-
-			//SEE: https://developer.chrome.com/docs/capabilities/web-apis/web-share-target#sample_applications
-			//SEE: https://developer.mozilla.org/en-US/docs/Web/Manifest/file_handlers
-			//SEE: https://developer.mozilla.org/en-US/docs/Web/Manifest/shortcuts
-			//SEE: https://github.com/GoogleChrome/samples/blob/gh-pages/web-share/src/manifest.json
-			manifest: { //A: pwa manifest template HERE
-				name: 'PAUI',
-				short_name: 'PAUI',
-				description: 'PAUI',
-				start_url: './?version=1', //A: tiene que ser ABSOLUTA, no ./ para que ande share_target!
-				theme_color: '#000000',
-				share_target: {
-					"action": "./_share-target",
-					"enctype": "multipart/form-data",
-					"method": "POST",
-					"params": {
-						"files": [{ //SEE: https://github.com/GoogleChrome/samples/blob/gh-pages/web-share/src/manifest.json
-							"name": "media",
-							"accept": [
-								"audio/*",
-								"image/*",
-								"video/*",
-								"applicaton/pdf"
-							]
-						}]
-					}
-				}
-			},
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
 				cleanupOutdatedCaches: true,
 				clientsClaim: true,
 			},
+			manifest: makeManifest(),
 
 			devOptions: { //SEE: https://vite-pwa-org.netlify.app/guide/development.html#type-declarations
 				enabled: true, //A: can install from npm run dev

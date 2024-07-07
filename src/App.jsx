@@ -14,6 +14,20 @@ import { speech_from_text_p } from 'src/svc/speech-from-text'
 import * as crypto from 'src/svc/crypto';
 window.mycrypto= crypto;
 
+async function handleFiles(files) {
+	for (const file of files) {
+		const blob = await file.getFile();
+		//blob.handle = file;
+		//const text = await blob.text();
+		console.log(`${file.name} handled`);
+	}
+}
+if ('launchQueue' in window) { console.log('File Handling API is supported!');
+	launchQueue.setConsumer(launchParams => {
+		handleFiles(launchParams.files);
+	});
+} else { console.error('File Handling API is not supported!'); }
+
 export function App() {
 	const [view,setView]= useState('');
 	const [txt,setTxt]= useState('')
@@ -34,21 +48,21 @@ export function App() {
 		await fsp.writeFile('/xwip.txt',a_txt);	
 	}
 
-  return (
-    <div>
+	return (
+		<div>
 			{ 
 				view=='qrimg' ?  <QRImg txt="https://podemosaprender.org" /> :
-				view=='qrscan' ? <QRScan /> :
-				view=='editor' ? <Editor value={txt} onChange={onChange}/> :
-				<h1>Hola</h1>
+					view=='qrscan' ? <QRScan /> :
+					view=='editor' ? <Editor value={txt} onChange={onChange}/> :
+					<h1>Hola</h1>
 			}
 			<h3>Files</h3>
 			<Button label="Refresh" onClick={files_refresh} />
 			<ul>
 				{ files.map((name,idx) => <li key={idx}>{name}</li>) }
 			</ul>
-      <PWABadge />
-    </div>
-  )
+			<PWABadge />
+		</div>
+	)
 }
 

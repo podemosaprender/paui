@@ -79,6 +79,7 @@ clientsClaim();
 // the `workbox injectManifest` build step.
 precacheAndRoute(self.__WB_MANIFEST);
 
-registerRoute( '/_share-target', shareTargetHandler, 'POST');
+//SEE: https://developer.chrome.com/docs/workbox/modules/workbox-routing/#how_to_register_a_regular_expression_route
+registerRoute( new RegExp('/_share-target'), shareTargetHandler, 'POST');
 
 registerRoute( new RegExp(urlPrefix), cachedMediaHandler);

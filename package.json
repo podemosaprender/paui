@@ -12,6 +12,9 @@
   "dependencies": {
     "@isomorphic-git/lightning-fs": "^4.6.0",
     "@replit/codemirror-vim": "^6.2.1",
+    "@rjsf/core": "^5.19.1",
+    "@rjsf/utils": "^5.19.1",
+    "@rjsf/validator-ajv8": "^5.19.1",
     "@uiw/codemirror-extensions-color": "^4.21.21",
     "@uiw/codemirror-extensions-langs": "^4.21.21",
     "@uiw/codemirror-themes-all": "^4.21.21",

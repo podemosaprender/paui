@@ -9,6 +9,7 @@ import { Editor } from 'src/components/Editor'
 import { QRImg } from 'src/components/QRImg';
 import { QRScan } from 'src/components/QRScan';
 import { Upload } from 'src/components/Upload';
+import { FormFromSchema } from 'src/components/FormFromSchema';
 
 import { fsp } from './svc/git'
 import { speech_from_text_p } from 'src/svc/speech-from-text'
@@ -33,7 +34,7 @@ const ch= new BroadcastChannel('messages')
 ch.onmessage= (...a) => console.log("ch onmsg", a)
 
 export function App() {
-	const [view,setView]= useState('');
+	const [view,setView]= useState('form');
 	const [txt,setTxt]= useState('')
 	const [files, setFiles]= useState([]);
 
@@ -56,9 +57,10 @@ export function App() {
 		<div>
 			{ 
 				view=='qrimg' ?  <QRImg txt="https://podemosaprender.org" /> :
-					view=='qrscan' ? <QRScan /> :
-					view=='editor' ? <Editor value={txt} onChange={onChange}/> :
-					<h1>Hola</h1>
+				view=='qrscan' ? <QRScan /> :
+				view=='editor' ? <Editor value={txt} onChange={onChange}/> :
+				view=='form' ? <FormFromSchema /> :
+				<h1>Hola</h1>
 			}
 			<h3>Files</h3>
 			<Button label="Refresh" onClick={files_refresh} />

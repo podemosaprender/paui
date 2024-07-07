@@ -26,8 +26,8 @@ export function App() {
 	}catch(ex){alert(ex)}}
 
 	useEffect(() => {
-		fsp.readFile('/xwip.txt','utf8').then( setTxt ).catch( x= console.log("read xwip",x) );
 		files_refresh();
+		fsp.readFile('/xwip.txt','utf8').then( setTxt ).catch( x= console.log("read xwip",x) );
 	}, [])
 
 	const onChange= async (a_txt) => {

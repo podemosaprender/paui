@@ -4,11 +4,11 @@ import http from 'isomorphic-git/http/web'
 
 export const fs= new FS()
 export const fsp= fs.promises
-window.fs= fs
-window.fsp= fsp
+//window.fs= fs
+//window.fsp= fsp
 fs.init()
 
-window.gitt0= async () => {
+const gitt0= async () => {
 	const dir='/trepo';
 
 	await git.clone({

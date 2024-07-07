@@ -17,9 +17,15 @@ window.mycrypto= crypto;
 export function App() {
 	const [view,setView]= useState('');
 	const [txt,setTxt]= useState('')
+	const [files, setFiles]= useState([]);
+
+	const files_refresh= async () => {try{
+		setFiles(await fsp.readdir('/up'));
+	}catch(ex){alert(ex)}}
 
 	useEffect(() => {
 		fsp.readFile('/xwip.txt','utf8').then( setTxt );
+		files_refresh();
 	}, [])
 
 	const onChange= async (a_txt) => {
@@ -34,6 +40,11 @@ export function App() {
 				view=='editor' ? <Editor value={txt} onChange={onChange}/> :
 				<h1>Hola</h1>
 			}
+			<h3>Files</h3>
+			<Button label="Refresh" onClick={files_refresh} />
+			<ul>
+				{ files.map(name => <li>{name}</li>) }
+			</ul>
       <PWABadge />
     </div>
   )

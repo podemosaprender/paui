@@ -7,6 +7,8 @@ import {precacheAndRoute} from 'workbox-precaching';
 import {RangeRequestsPlugin} from 'workbox-range-requests';
 import {registerRoute} from 'workbox-routing';
 
+import { fsp } from '../src/svc/git'
+
 //import {cacheName, channelName, urlPrefix} from './constants';
 const cacheName= 'media';
 const channelName= 'messages';
@@ -57,10 +59,24 @@ const shareTargetHandler = async ({event}) => {
     );
   }
 
+	try {
+		await fsp.init();
+		try { fsp.mkdir('/up') } catch (ex) { console.log("fsp mkdir",ex) } ;
+		console.log("shareTargetHandler fsp init OK");
+	} catch(ex) {
+		console.log("shareTargetHandler fsp init ERROR",ex);
+	}
+
+	try {
+		await	fsp.writeFile('/up/'+mediaFile.name, await mediaFile.bytes());
+		console.log("shareTargetHandler fsp",ok)
+	} catch (ex) {
+		console.log("shareTargetHandler fsp",ex)
+	}
+
   // Use the MIME type of the first file shared to determine where we redirect.
 	const routeToRedirectTo = null; //XXX: let app decide and inform user
-  const redirectionUrl = routeToRedirectTo ? `/#${routeToRedirectTo.href}` : '/';
-
+	const redirectionUrl = routeToRedirectTo ? `/#${routeToRedirectTo.href}` : '/paui/'; //XXX:HC
 
 	return Response.redirect(redirectionUrl, 303); //A: After the POST succeeds, redirect to the main page.
 };

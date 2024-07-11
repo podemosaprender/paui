@@ -3,6 +3,7 @@
 //SEE: https://css-tricks.com/converting-color-spaces-in-javascript/
 import paletteGenerator from 'palette-generator'
 const Schemes= ['analogous', 'accentedAnalogous', 'complementary', 'dual', 'triadic'] 
+const Colors= ['alpha','beta','gamma','delta','grey'];
 
 function RGBHexToInts(s) {
 	return s.match(/^\#?(..)(..)(..)/).slice(1,4).map(h => parseInt(h,16))
@@ -96,4 +97,4 @@ function palette(options={}) {
 	return p_rgb;
 }
 
-export { palette, palette2html, HSLtoRGB, RGBtoHSL, RGBHexToInts, Schemes }
+export { palette, palette2html, HSLtoRGB, RGBtoHSL, RGBHexToInts, Schemes, Colors }

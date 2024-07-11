@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { makeManifest, allFileTypesAndMimes } from './manifest.js';
+import vitePluginRequire from "vite-plugin-require";
 
 //SEE: https://vitejs.dev/config/server-options.html#server-https
 
@@ -46,6 +47,7 @@ export default defineConfig({
 	plugins: [
 		basicSsl(), 
 		react(),  
+		vitePluginRequire.default(),
 		nodePolyfills(),
 		comlink(),
 		splitVendorChunkPlugin(),
@@ -69,6 +71,7 @@ export default defineConfig({
 			},
 		})],
 	build: {
+		commonjsOptions: { transformMixedEsModules: true },
 		rollupOptions: { output: { manualChunks }},
 	},
 })

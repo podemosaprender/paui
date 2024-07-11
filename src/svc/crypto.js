@@ -28,9 +28,10 @@
 
  */
 //SEE: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/wrapKey
+import * as util from './util';
 
 function deriveSecretKey(privateKey, publicKey) {
-	return window.crypto.subtle.deriveKey(
+	return globalThis.crypto.subtle.deriveKey(
 		{ name: "ECDH", public: publicKey, },
 		privateKey,
 		{ name: "AES-GCM", length: 256, },
@@ -39,38 +40,18 @@ function deriveSecretKey(privateKey, publicKey) {
 	);
 }
 
-async function XXXWIP()  {
-	alicesKeyPair = await window.crypto.subtle.generateKey(
-		{
-			name: "ECDH",
-			namedCurve: "P-384",
-		},
-		true, //A: extractable
-		["deriveKey"],
-	);
-	bobsKeyPair = await window.crypto.subtle.generateKey(
-		{
-			name: "ECDH",
-			namedCurve: "P-384",
-		},
-		true,
-		["deriveKey"],
-	);
-	window.crypto.subtle.exportKey("jwk",alicesKeyPair.publicKey) //A: json!
-}
-
 async function passToKey(plainTextPass, salt= null) { //U: safe (AES) key from plain text pass, eg to encrypt store
 	//SEE: https://github.com/mdn/dom-examples/blob/4c1e311b6cd3bb3b25dc3ea0e0bc48f9e4e5eccb/web-crypto/derive-key/pbkdf2.js#L64
 	//SEE: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey#pbkdf2_2
 	try {
 		const enc = new TextEncoder();
-		const keyMaterial= await window.crypto.subtle.importKey( //SEC! DON'T USE as key, it's only the input bytes!
+		const keyMaterial= await globalThis.crypto.subtle.importKey( //SEC! DON'T USE as key, it's only the input bytes!
 			"raw", enc.encode(plainTextPass),
 			"PBKDF2", false, ["deriveBits", "deriveKey"],
 		);
-		const salt= window.crypto.getRandomValues(new Uint8Array(16));
+		const salt= globalThis.crypto.getRandomValues(new Uint8Array(16));
 		console.log({keyMaterial, salt})
-		const key = await window.crypto.subtle.deriveKey(
+		const key = await globalThis.crypto.subtle.deriveKey(
 			{ name: "PBKDF2", salt, iterations: 100, hash: "SHA-256", },
 			keyMaterial,
 		  { name: "AES-GCM", length: 256 },	
@@ -82,27 +63,54 @@ async function passToKey(plainTextPass, salt= null) { //U: safe (AES) key from p
 	}catch(ex) { console.log(ex) }
 }
 
-async function genKeypair() { //U: ECDH
-	let keyPair = await window.crypto.subtle.generateKey(
-		{
-			name: "ECDSA", //A: algorithm MUST work with usage, ECDSA for signing, ECDH for encryption
-			namedCurve: "P-384",
-		},
-		true,
-		["sign", "verify"],
-	);
+const T_ECDSA={name:"ECDSA",namedCurve:"P-384", hash: { name: "SHA-384" }, } //A: algorithm MUST work with usage, ECDSA for signing, ECDH for encryption
+async function genKeypairSign() { //U: for signatures, ECDSA
+	let keyPair = await globalThis.crypto.subtle.generateKey( T_ECDSA, true, ["sign", "verify"],);
 	return keyPair;
 }
 
+const EXPORT_FMT='jwk'
 async function exportKey(k) {
- const ke= await window.crypto.subtle.exportKey("jwk", k)
- return JSON.stringify(ke); //XXX: export only required fields
+ const ke= await globalThis.crypto.subtle.exportKey(EXPORT_FMT, k)
+ return util.enc_b64u(util.ser(ke)); //XXX: export only required fields
 }
 
+async function importKey(k_exp_s,uses) {
+	let k_exp= util.ser_r(util.enc_b64u_r(k_exp_s));
+	//DBG: console.log({k_exp})
+	return await globalThis.crypto.subtle.importKey(EXPORT_FMT,k_exp,T_ECDSA,true,uses);
+}
+
+async function signatureFor(msg,privateKey) {
+	let encoded= (new TextEncoder()).encode(msg);
+	let signature = await globalThis.crypto.subtle.sign( T_ECDSA, privateKey, encoded,);
+	return signature;
+}
+
+async function sign(msg, privateKey) {
+	let msg_s= util.ser(msg)
+	let sig= await signatureFor(msg_s, privateKey)
+	let sig_b64= util.enc_b64u(sig) 
+	return JSON.stringify({m: msg_s, s: sig_b64});
+}
+
+async function verify(signed_s,publicKey) {
+	let signed= JSON.parse(signed_s);
+	let sig_read_s= util.enc_b64u_r(signed.s)
+	let sig_read= util.uint8ArrayToStr_r(sig_read_s);
+	
+	//DBG: console.log({signed, sig_read})
+
+	let encoded= (new TextEncoder()).encode(signed.m);
+	let r = await globalThis.crypto.subtle.verify(T_ECDSA, publicKey, sig_read, encoded);
+	return r ? util.ser_r(signed.m) : 'ERROR';
+}
 
 async function encrypt(plaintext, salt, iv) {
-	return window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+	return globalThis.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
 }
 
+export { passToKey, genKeypairSign, exportKey, importKey, sign, verify }
 
-export { passToKey, genKeypair, exportKey }
+//S: main node ***********************************************
+

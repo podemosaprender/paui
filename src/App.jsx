@@ -10,11 +10,13 @@ import { QRImg } from 'src/components/QRImg';
 import { QRScan } from 'src/components/QRScan';
 import { Upload } from 'src/components/Upload';
 import { FormFromSchema } from 'src/components/FormFromSchema';
+import { EditorPalette } from 'src/components/EditorPalette';
 
 import { fsp } from './svc/git'
 import { speech_from_text_p } from 'src/svc/speech-from-text'
 import * as crypto from 'src/svc/crypto';
 window.mycrypto= crypto;
+
 
 async function handleFiles(files) {
 	for (const file of files) {
@@ -33,9 +35,7 @@ if ('launchQueue' in window) { console.log('File Handling API is supported!');
 const ch= new BroadcastChannel('messages')
 ch.onmessage= (...a) => console.log("ch onmsg", a)
 
-export function App() {
-	const [view,setView]= useState('form');
-	const [txt,setTxt]= useState('')
+function Files() {
 	const [files, setFiles]= useState([]);
 
 	const files_refresh= async () => {try{
@@ -46,6 +46,40 @@ export function App() {
 
 	useEffect(() => {
 		files_refresh();
+	}, [])
+
+	return (<>
+		<h3>Files</h3>
+		<Button label="Refresh" onClick={files_refresh} />
+		<Upload />
+		<ul>
+			{ files.map((name,idx) => <li key={idx}><a href={'./up/'+name} target='_blank'>{name}</a></li>) }
+		</ul>
+	</>
+	)
+}
+
+export default function Menu() {
+	const [activeIndex, setActiveIndex] = useState(0);
+
+	return (
+		<div className="card" style={{ position: "fixed", bottom: 0, width: '100vw', height: '42px', overflowX: 'scroll' }}>
+			<div style={{width: "max-content"}}>
+		 { Array.from({ length: 4 }, (_, i) => (
+			 <Button label={"acc "+i} rounded className="mx-1"/>
+			))
+		 }
+			</div>
+		</div>
+	)
+}
+
+
+export function App() {
+	const [view,setView]= useState('');
+	const [txt,setTxt]= useState('')
+
+	useEffect(() => {
 		fsp.readFile('/xwip.txt','utf8').then( setTxt ).catch( x => console.log("read xwip",x) );
 	}, [])
 
@@ -53,21 +87,23 @@ export function App() {
 		await fsp.writeFile('/xwip.txt',a_txt);	
 	}
 
+
 	return (
 		<div>
+			<div style={{ height: '90vh', overflowY: 'scroll'}}>
 			{ 
 				view=='qrimg' ?  <QRImg txt="https://podemosaprender.org" /> :
-				view=='qrscan' ? <QRScan /> :
-				view=='editor' ? <Editor value={txt} onChange={onChange}/> :
-				view=='form' ? <FormFromSchema /> :
-				<h1>Hola</h1>
+					view=='qrscan' ? <QRScan /> :
+					view=='editor' ? <Editor value={txt} onChange={onChange}/> :
+					view=='files' ? <Files /> :
+					view=='form' ? <FormFromSchema /> :
+					<div>
+						<h1>Hola</h1>
+						<EditorPalette />
+					</div>
 			}
-			<h3>Files</h3>
-			<Button label="Refresh" onClick={files_refresh} />
-			<Upload />
-			<ul>
-				{ files.map((name,idx) => <li key={idx}><a href={'./up/'+name} target='_blank'>{name}</a></li>) }
-			</ul>
+			</div>
+			<Menu />
 			<PWABadge />
 		</div>
 	)

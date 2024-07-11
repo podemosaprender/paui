@@ -3,10 +3,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 //S: prime {
+//U: for json schema form: import './bootstrap.min.css'
 import 'primeflex/primeflex.css'; //SEE: https://primereact.org/calendar/
 import 'primeicons/primeicons.css'; //SEE: https://primereact.org/icons/#list
-import 'primereact/resources/themes/lara-dark-purple/theme.css' //SEE: https://primereact.org/calendar/
-//OPT: import "primereact/resources/themes/lara-light-cyan/theme.css";
+import 'primereact/resources/themes/bootstrap4-dark-purple/theme.css' //SEE: https://primereact.org/calendar/
 import './index.css'
 import { PrimeReactProvider } from 'primereact/api';
 // } prime

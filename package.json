@@ -12,6 +12,7 @@
   "dependencies": {
     "@isomorphic-git/lightning-fs": "^4.6.0",
     "@replit/codemirror-vim": "^6.2.1",
+    "@rjsf/bootstrap-4": "^5.19.1",
     "@rjsf/core": "^5.19.1",
     "@rjsf/utils": "^5.19.1",
     "@rjsf/validator-ajv8": "^5.19.1",
@@ -23,13 +24,15 @@
     "comlink": "^4.4.1",
     "isomorphic-git": "^1.25.10",
     "mime-db": "^1.52.0",
+    "palette-generator": "^1.1.0",
     "primeflex": "^3.3.1",
     "primeicons": "^6.0.1",
     "primereact": "^10.3.3",
     "qr-scanner": "^1.4.2",
     "qrcode-generator": "^1.4.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "vite-plugin-require": "^1.2.14"
   },
   "devDependencies": {
     "@types/react": "^18.3.1",

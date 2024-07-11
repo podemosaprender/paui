@@ -9,7 +9,7 @@ import { Editor } from 'src/components/Editor'
 import { QRImg } from 'src/components/QRImg';
 import { QRScan } from 'src/components/QRScan';
 import { Upload } from 'src/components/Upload';
-import { FormFromSchema } from 'src/components/FormFromSchema';
+import { FormFromSchema } from 'src/components/FormFromSchema2';
 import { EditorPalette } from 'src/components/EditorPalette';
 
 import { fsp } from './svc/git'
@@ -76,7 +76,7 @@ export default function Menu() {
 
 
 export function App() {
-	const [view,setView]= useState('');
+	const [view,setView]= useState('form');
 	const [txt,setTxt]= useState('')
 
 	useEffect(() => {

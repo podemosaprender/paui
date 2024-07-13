@@ -45,7 +45,7 @@ export default defineConfig({
 		])
 	},
 	plugins: [
-		basicSsl(), 
+		...(process.env.NOSSL ? [] : [basicSsl()]),
 		react(),  
 		vitePluginRequire.default(),
 		nodePolyfills(),

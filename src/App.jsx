@@ -38,7 +38,11 @@ const ch= new BroadcastChannel('messages')
 ch.onmessage= (...a) => console.log("ch onmsg", a)
 window.ch= ch;
 
-navigator.serviceWorker.onmessage= (m) => console.log("MM",m)
+const listeners_= {};
+navigator.serviceWorker.onmessage= (m) => {
+	console.log("MM",m);
+	Object.values(listeners_).forEach( cb => { try{ cb(m) }catch(ex){}} )
+}
 
 function Files() {
 	const [files, setFiles]= useState([]);
@@ -81,10 +85,19 @@ export default function Menu({options, value, setValue}) {
 export function App() {
 	const [view,setView]= useState('');
 	const [txt,setTxt]= useState('')
+	const [pk,setPk]= useState('')
 
 	useEffect(() => {
 		//fsp.readFile('/xwip.txt','utf8').then( setTxt ).catch( x => console.log("read xwip",x) );
 	}, [])
+
+	useEffect(() => {
+		if (view=='qrimg') {
+			listeners_['pk']= (m) => {console.log("CMP LIS", m); let pk= m.data.v; console.log({pk},pk.length); setPk(pk); }
+			if (!pk) { navigator.serviceWorker.controller.postMessage({cmd:"pubkey"}) }
+		}
+		return () => {delete listeners_['pk']}
+	},[view]);
 
 	const onChange= async (a_txt) => {
 		//await fsp.writeFile('/xwip.txt',a_txt);	
@@ -94,7 +107,7 @@ export function App() {
 		<div>
 			<div style={{ height: '90vh', overflowY: 'scroll'}}>
 			{ 
-				view=='qrimg' ?  <QRImg txt="https://podemosaprender.org" /> :
+				view=='qrimg' ?  <QRImg txt={(pk|| 'wait').substr(0,1000)} /> :
 					view=='qrscan' ? <QRScan /> :
 					view=='editor' ? <Editor value={txt} onChange={onChange}/> :
 					view=='files' ? <Files /> :

@@ -7,7 +7,7 @@ import qrcode from "qrcode-generator";
 //SEE: https://kazuhikoarase.github.io/qrcode-generator/js/
 
 function QR(str) { //U: genera un objeto QR para generar distintos formatos de grafico para la str recibida como parametro
-  var typeNumber = 10; //U: cuantos datos entran VS que calidad requiere, con 10 y las tabletas baratas de VRN escaneando monitor laptop funciona ok, entran mas de 150 bytes
+  var typeNumber = 0; //U: cuantos datos entran VS que calidad requiere, 0=auto, con 10 y las tabletas baratas escaneando monitor laptop funciona ok, entran mas de 150 bytes
   var errorCorrectionLevel = 'L'; //U: mas alto el nivel de correcion, menos fallas pero menos datos, con L funciona ok
   var qr= qrcode(typeNumber, errorCorrectionLevel);
   qr.addData(str);

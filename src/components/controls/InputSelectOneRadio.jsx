@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { RadioButton } from "primereact/radiobutton";
 
+import { ensure_kv } from 'src/svc/util';
+
 export function InputSelectOneRadio({options,name,onChange,value}) {
-	const optionskv= Array.isArray(options) ? Object.assign({},...options.map(o => ({[o]: o}))) : options;
+	const optionskv= ensure_kv(options);
 	return (
 		<div className="card flex justify-content-center">
 			<div className="flex flex-wrap gap-3">

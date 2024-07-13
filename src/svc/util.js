@@ -1,5 +1,9 @@
 //INFO: funciones que usamos siempre
-const fs = require("fs");
+//XXX:const fs = require("fs");
+
+function ensure_kv(kvOrArray) { 
+	return Array.isArray(kvOrArray) ? Object.assign({},...kvOrArray.map(o => ({[o]: o}))) : kvOrArray 
+};
 
 function ser(object_or_str) {
 	return typeof(object_or_str)=='string' ? '\t'+object_or_str : JSON.stringify(object_or_str);
@@ -61,7 +65,7 @@ const get_file_newer= (path,age_max,enc='utf8') => {
 
 export {	fname_safe, path_abs, ensure_dir, stdin_json, 
 	set_file, get_file, get_file_newer, dirname, 
-	enc_b64u, enc_b64u_r, uint8ArrayToStr, uint8ArrayToStr_r,
+	ensure_kv, enc_b64u, enc_b64u_r, uint8ArrayToStr, uint8ArrayToStr_r,
 	ser, ser_r,
 }
 

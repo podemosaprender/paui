@@ -66,11 +66,12 @@ export default defineConfig({
 			devOptions: { //SEE: https://vite-pwa-org.netlify.app/guide/development.html#type-declarations
 				enabled: true, //A: can install from npm run dev
 				navigateFallback: 'index.html',
-				suppressWarnings: true,
+				suppressWarnings: false,
 				type: 'module',
 			},
 		})],
 	build: {
+		//minify: false,
 		commonjsOptions: { transformMixedEsModules: true },
 		rollupOptions: { output: { manualChunks }},
 	},

@@ -12,10 +12,12 @@ import { Upload } from 'src/components/Upload';
 import { FormFromSchema } from 'src/components/FormFromSchema2';
 import { EditorPalette } from 'src/components/EditorPalette';
 
-import { fsp } from './svc/git'
+import { ensure_kv } from 'src/svc/util';
+
+//import { fsp } from './svc/git'
 import { speech_from_text_p } from 'src/svc/speech-from-text'
-import * as crypto from 'src/svc/crypto';
-window.mycrypto= crypto;
+//import * as crypto from 'src/svc/crypto';
+// window.mycrypto= crypto;
 
 
 async function handleFiles(files) {
@@ -34,6 +36,9 @@ if ('launchQueue' in window) { console.log('File Handling API is supported!');
 
 const ch= new BroadcastChannel('messages')
 ch.onmessage= (...a) => console.log("ch onmsg", a)
+window.ch= ch;
+
+navigator.serviceWorker.onmessage= (m) => console.log("MM",m)
 
 function Files() {
 	const [files, setFiles]= useState([]);
@@ -59,16 +64,14 @@ function Files() {
 	)
 }
 
-export default function Menu() {
-	const [activeIndex, setActiveIndex] = useState(0);
-
+export default function Menu({options, value, setValue}) {
+	const options_kv= ensure_kv(options);
 	return (
 		<div className="card" style={{ position: "fixed", bottom: 0, width: '100vw', height: '42px', overflowX: 'scroll' }}>
 			<div style={{width: "max-content"}}>
-		 { Array.from({ length: 4 }, (_, i) => (
-			 <Button label={"acc "+i} rounded className="mx-1"/>
-			))
-		 }
+		 { Object.entries(options_kv).map(([v,lbl]) => (
+			 <Button label={lbl || v} key={v} onClick={ () => setValue(v) } rounded className="mx-1" />
+			)) }
 			</div>
 		</div>
 	)
@@ -76,17 +79,16 @@ export default function Menu() {
 
 
 export function App() {
-	const [view,setView]= useState('form');
+	const [view,setView]= useState('');
 	const [txt,setTxt]= useState('')
 
 	useEffect(() => {
-		fsp.readFile('/xwip.txt','utf8').then( setTxt ).catch( x => console.log("read xwip",x) );
+		//fsp.readFile('/xwip.txt','utf8').then( setTxt ).catch( x => console.log("read xwip",x) );
 	}, [])
 
 	const onChange= async (a_txt) => {
-		await fsp.writeFile('/xwip.txt',a_txt);	
+		//await fsp.writeFile('/xwip.txt',a_txt);	
 	}
-
 
 	return (
 		<div>
@@ -97,14 +99,11 @@ export function App() {
 					view=='editor' ? <Editor value={txt} onChange={onChange}/> :
 					view=='files' ? <Files /> :
 					view=='form' ? <FormFromSchema /> :
-					<div>
-						<h1>Hola</h1>
-						<EditorPalette />
-					</div>
+					<div> <h1>Hola</h1> <EditorPalette /> </div>
 			}
 			</div>
-			<Menu />
-			<PWABadge />
+			<Menu options={['qrimg','qrscan','editor','files','form','palette']} setValue={setView} value={view} />
+			<PWABadge/>
 		</div>
 	)
 }

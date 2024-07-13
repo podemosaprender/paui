@@ -28,7 +28,7 @@
 
  */
 //SEE: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/wrapKey
-import * as util from './util';
+import { enc_b64u, enc_b64u_r, ser, ser_r, uint8ArrayToStr_r } from './util';
 
 function deriveSecretKey(privateKey, publicKey) {
 	return globalThis.crypto.subtle.deriveKey(
@@ -72,11 +72,11 @@ async function genKeypairSign() { //U: for signatures, ECDSA
 const EXPORT_FMT='jwk'
 async function exportKey(k) {
  const ke= await globalThis.crypto.subtle.exportKey(EXPORT_FMT, k)
- return util.enc_b64u(util.ser(ke)); //XXX: export only required fields
+ return enc_b64u(ser(ke)); //XXX: export only required fields
 }
 
 async function importKey(k_exp_s,uses) {
-	let k_exp= util.ser_r(util.enc_b64u_r(k_exp_s));
+	let k_exp= ser_r(enc_b64u_r(k_exp_s));
 	//DBG: console.log({k_exp})
 	return await globalThis.crypto.subtle.importKey(EXPORT_FMT,k_exp,T_ECDSA,true,uses);
 }
@@ -88,22 +88,22 @@ async function signatureFor(msg,privateKey) {
 }
 
 async function sign(msg, privateKey) {
-	let msg_s= util.ser(msg)
+	let msg_s= ser(msg)
 	let sig= await signatureFor(msg_s, privateKey)
-	let sig_b64= util.enc_b64u(sig) 
+	let sig_b64= enc_b64u(sig) 
 	return JSON.stringify({m: msg_s, s: sig_b64});
 }
 
 async function verify(signed_s,publicKey) {
 	let signed= JSON.parse(signed_s);
-	let sig_read_s= util.enc_b64u_r(signed.s)
-	let sig_read= util.uint8ArrayToStr_r(sig_read_s);
+	let sig_read_s= enc_b64u_r(signed.s)
+	let sig_read= uint8ArrayToStr_r(sig_read_s);
 	
 	//DBG: console.log({signed, sig_read})
 
 	let encoded= (new TextEncoder()).encode(signed.m);
 	let r = await globalThis.crypto.subtle.verify(T_ECDSA, publicKey, sig_read, encoded);
-	return r ? util.ser_r(signed.m) : 'ERROR';
+	return r ? ser_r(signed.m) : 'ERROR';
 }
 
 async function encrypt(plaintext, salt, iv) {

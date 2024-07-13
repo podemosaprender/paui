@@ -2,11 +2,11 @@ import FS from '@isomorphic-git/lightning-fs'
 import git from 'isomorphic-git'
 import http from 'isomorphic-git/http/web'
 
-export const fs= new FS()
-export const fsp= fs.promises
+//export const fs= new FS()
+//export const fsp= fs.promises
 //window.fs= fs
 //window.fsp= fsp
-fs.init()
+//fs.init()
 
 const gitt0= async () => {
 	const dir='/trepo';

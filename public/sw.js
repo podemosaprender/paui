@@ -7,7 +7,9 @@ import {precacheAndRoute} from 'workbox-precaching';
 import {RangeRequestsPlugin} from 'workbox-range-requests';
 import {registerRoute} from 'workbox-routing';
 
-import { fsp } from '../src/svc/git'
+//import { fsp } from '../src/svc/git'
+const fsp= {}; //XXX
+import { genKeypairSign, exportKey } from 'src/svc/crypto';
 
 //import {cacheName, channelName, urlPrefix} from './constants';
 const cacheName= 'media';
@@ -15,6 +17,7 @@ const channelName= 'messages';
 const urlPrefix= '/_media/';
 
 const broadcastChannel = 'BroadcastChannel' in self ? new BroadcastChannel(channelName) : null;
+broadcastChannel.postMessage('startting')
 
 // This event is fired when a user has taken action in the browser to remove
 // an item that was previously added to the content index.
@@ -27,6 +30,21 @@ self.addEventListener('contentdelete', (event) => {
     await cache.delete(cacheKey);
   })());
 });
+
+self.addEventListener('message', async (event) => {
+	console.log("MSG", event.source!=null, event);
+	let r= null;
+	if (event.data?.cmd=='pubkey') { console.log("PK");
+		let kp= await genKeypairSign(); console.log({kp});
+		let pk= await exportKey(kp.publicKey); console.log({pk})
+		r= pk;
+	}
+	console.log("MSG R", r, event.source!=null, event);
+  event.source.postMessage(r);
+	console.log("MSG R OK", r, event.source!=null, event);
+});
+console.log("waiting for messages");
+
 
 const shareTargetHandler = async ({event}) => {
   if (broadcastChannel) {

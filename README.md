@@ -33,9 +33,15 @@ SEE: @isomorphic-git/lightning-fs
 ### WIP
 
 ~~~
+msg= {m: '{"i":"xtest1","k":"eyJrZXlfb3BzIjpbInZlcmlmeSJdLCJl","t":"2024-07-10T20:38:53.021Z","ch":"xtest-s1","d":{"name":"Pepon","contact_mail":"m@mauriciocap.com","color_primary":"00529c","logo_emoji":"😎","logo_line1":"Una Sola"}}', s: "J6kn6tO5/UPp4P5SA7JrjU+/lmDrIrSVzDagyLzGbqvcA8Shfho63ndY5J3olsiOn0RlGdgQvacyjaE0aDjbOunWDiKgoYaINml+A0hgiqvgQy2Mikj+4hljFKcKTVnq"}
+msgs= JSON.stringify(msg)
+xa= btoa(unescape(encodeURIComponent(msgs))) //A: lucha con bash read, comillas, json, utf ...
+await fetch('https://t3st.o-o.fyi/xp.cgi',{method:'POST', body: xa}).then(r => r.text())
+~~~
 await fetch('https://api1.o-o.fyi/x.cgi',{method: "POST", body: JSON.stringify({x: "hola"})}).then(r => r.text())
 ~~~
 
 # Splitting
 
 https://blog.logrocket.com/react-dynamic-imports-route-centric-code-splitting-guide/
+

@@ -35,3 +35,7 @@ SEE: @isomorphic-git/lightning-fs
 ~~~
 await fetch('https://api1.o-o.fyi/x.cgi',{method: "POST", body: JSON.stringify({x: "hola"})}).then(r => r.text())
 ~~~
+
+# Splitting
+
+https://blog.logrocket.com/react-dynamic-imports-route-centric-code-splitting-guide/

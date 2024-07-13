@@ -1,9 +1,34 @@
 //INFO: toda la API aqui para poder desarrollar SIN SW primero pero despues usarla desde ahi
 
 //S: API { **************************************************
-import { genKeypairSign, exportKey } from 'src/svc/crypto';
-//import { fsp } from '../src/svc/git'
-const fsp= {}; //XXX
+import { genKeypairSign, exportKey, importKey, sign } from 'src/svc/crypto';
+import { fsp } from 'src/svc/git'
+
+const _key_for= async (id='k',t='.pub') => { //U: crear y guardar keypairs
+	let keypath=`/_SEC/${id}`;
+	let loadk; try { loadk= await fsp.readFile(keypath+t,'utf8'); }catch(ex){console.log("fsp read maybe OK",id,t,ex) }
+	if (!loadk) {
+		let kp= await genKeypairSign(); console.log({kp});
+		let privk= await exportKey(kp.privateKey); console.log({privk});
+		let pubk= await exportKey(kp.publicKey); console.log({pubk})
+		try { await fsp.mkdir('/_SEC') }catch(ex){console.log("fsp mkdir _SEC maybe OK",ex)}
+		await fsp.writeFile(keypath+'.pub', pubk);
+		await fsp.writeFile(keypath, privk);
+		loadk= t!='' ? pubk : privk;
+		console.log("KEYS CREATED AND WWITTEN", keypath);
+	} else { console.log("KEYS LOADED", keypath); }
+	return loadk;
+}
+
+const _sign= async (msg,id) => {
+	let pubk_s= await _key_for(id);
+	let privk_s= await _key_for(id,'');
+	let privk= await importKey(privk_s,['sign']);
+	let m= {i: "xtest1", k: pubk_s.substr(0,32), t: new Date().toJSON(), ch: 'xtest-s1', d: msg }
+	let signed= await sign(m, privk)
+	console.log("SIGNED",signed);
+	return signed;
+}
 
 const shareTargetHandler = async ({event}) => {
   if (broadcastChannel) { broadcastChannel.postMessage('Saving media locally...'); }
@@ -12,8 +37,7 @@ const shareTargetHandler = async ({event}) => {
   const mediaFiles = formData.getAll('media');
 	console.log("_share_target",[... formData.keys() ]);
 	try {
-		await fsp.init();
-		try { fsp.mkdir('/up') } catch (ex) { console.log("fsp mkdir",ex) } ;
+		try { await fsp.mkdir('/up') } catch (ex) { console.log("fsp mkdir",ex) } ;
 		console.log("shareTargetHandler fsp init OK");
 	} catch(ex) {
 		console.log("shareTargetHandler fsp init ERROR",ex);
@@ -61,11 +85,14 @@ const api_registerRoutes= (registerRoute) => {
 
 const api_onmessage= async (event) => {
 	let r= null;
-	if (event.data?.cmd=='pubkey') { console.log("PK");
-		let kp= await genKeypairSign(); console.log({kp});
-		let pk= await exportKey(kp.publicKey); console.log({pk})
-		r= {kp: ['pubkey','x'], v: pk}
-	}
+	try {
+		if (event.data?.cmd=='pubkey') { console.log("PK");
+			let pubk= await _key_for('k');
+			r= {kp: ['pubkey','x'], v: pubk}
+		} else if (event.data?.cmd=='sign') { console.log("SIGN");
+			r= await _sign(...event.data.args);
+		}
+	} catch (ex) { r= 'ERROR!!! '+ex; }
 	console.log("MSG R", r, event.source!=null, event);
 	return r;
 }

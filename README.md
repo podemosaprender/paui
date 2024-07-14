@@ -41,6 +41,10 @@ await fetch('https://t3st.o-o.fyi/xp.cgi',{method:'POST', body: xa}).then(r => r
 await fetch('https://api1.o-o.fyi/x.cgi',{method: "POST", body: JSON.stringify({x: "hola"})}).then(r => r.text())
 ~~~
 
+# ZIP
+
+https://gildas-lormeau.github.io/zip.js/ (ver source "Create a zip file")
+
 # Splitting
 
 https://blog.logrocket.com/react-dynamic-imports-route-centric-code-splitting-guide/

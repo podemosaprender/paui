@@ -8,7 +8,7 @@ import { InputText } from 'primereact/inputtext';
 import { Editor } from 'src/components/Editor'
 import { QRImg } from 'src/components/QRImg';
 import { QRScan } from 'src/components/QRScan';
-import { Upload } from 'src/components/Upload';
+import { Files } from 'src/components/Files';
 import { FormFromSchema } from 'src/components/FormFromSchema2';
 import { EditorPalette } from 'src/components/EditorPalette';
 
@@ -44,29 +44,6 @@ navigator.serviceWorker.onmessage= (m) => {
 	Object.values(listeners_).forEach( cb => { try{ cb(m) }catch(ex){}} )
 }
 
-function Files() {
-	const [files, setFiles]= useState([]);
-
-	const files_refresh= async () => {try{
-		let l= await fetch('./up').then( res => res.text() )
-		console.log("files_refresh",l)
-		setFiles(l.split('\n'));
-	}catch(ex){alert(ex)}}
-
-	useEffect(() => {
-		files_refresh();
-	}, [])
-
-	return (<>
-		<h3>Files</h3>
-		<Button label="Refresh" onClick={files_refresh} />
-		<Upload />
-		<ul>
-			{ files.map((name,idx) => <li key={idx}><a href={'./up/'+name} target='_blank'>{name}</a></li>) }
-		</ul>
-	</>
-	)
-}
 
 export default function Menu({options, value, setValue}) {
 	const options_kv= ensure_kv(options);
@@ -80,7 +57,6 @@ export default function Menu({options, value, setValue}) {
 		</div>
 	)
 }
-
 
 export function App() {
 	const [view,setView]= useState('');

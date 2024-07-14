@@ -7,16 +7,7 @@ import {precacheAndRoute} from 'workbox-precaching';
 import {RangeRequestsPlugin} from 'workbox-range-requests';
 import {registerRoute} from 'workbox-routing';
 
-import { api_onmessage, api_registerRoutes } from 'src/svc/api';
-
-//import {cacheName, channelName, urlPrefix} from './constants';
-const cacheName= 'media';
-const channelName= 'messages';
-const urlPrefix= '/_media/';
-
-const broadcastChannel = 'BroadcastChannel' in self ? new BroadcastChannel(channelName) : null;
-broadcastChannel.postMessage('startting')
-
+import { api_onmessage, api_registerRoutes, cacheName, channelName, urlPrefix} from 'src/svc/api';
 
 self.addEventListener('message', async (event) => {
 	console.log("MSG", event.source!=null, event);

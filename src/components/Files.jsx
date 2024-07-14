@@ -1,0 +1,68 @@
+import React, { useRef, useState, useEffect } from 'react';
+
+import { Button } from 'primereact/button';
+import { Toast } from 'primereact/toast';
+import { FileUpload } from 'primereact/fileupload';
+
+import { InputText } from './controls/InputText';
+
+//SEE: https://primereact.org/fileupload/#advanced
+
+export function Files() {
+	const [path, setPathImpl]= useState('');
+	const [files, setFiles]= useState({});
+	const toast = useRef(null);
+
+	const setPath= (p) => { setPathImpl(p.replace(/\/+/g,'/')); }
+
+	const files_refresh= async () => {try{
+		let l= await fetch('./up/'+path).then( res => res.text() )
+		console.log("files_refresh",l)
+		setFiles(JSON.parse(l));
+	}catch(ex){console.log("files_refresh",ex)}}
+
+	useEffect(() => { files_refresh(); }, [path])
+
+	const onUpload = () => {
+		toast.current.show({ severity: 'info', summary: 'Success', detail: 'Files eUploaded' });
+		files_refresh();
+	};
+
+	const onBeforeUpload = (e) => { 
+		e.formData.set('path',path); 
+		console.log("onBeforeUpload",e)
+	};
+	
+	return (<div>
+		<div className="card flex" style={{ alignItems: "end"}}>
+			<Toast ref={toast}></Toast>
+			<InputText value={path} setValue={setPath} label="path" />
+			<Button icon="pi pi-arrow-left" aria-label="on folder up" onClick={() => setPath(path.replace(/[^\/]+\/?$/,''))} />
+			<Button icon="pi pi-refresh" aria-label="refresh file list" onClick={files_refresh} />
+			<FileUpload 
+				onBeforeUpload={onBeforeUpload}
+				onUpload={onUpload} 
+				url="./_share-target" 
+				maxFileSize={10000000} 
+				accept="*|*/*" 
+			  multiple  auto
+				mode="basic" 
+				name="media" 
+				chooseOptions={{ icon: 'pi pi-upload', iconOnly: true, label: 'upload' }}
+			/>
+		</div>  
+		<div className="card flex">
+		<ul>
+			{ Object.keys(files).sort().map( (name,idx) => {
+				let d= files[name];
+				let dsc= `${name || '.'} ${new Date(d.mtimeMs || d.ctimeMs).toLocaleString()} ` + (d.type!='dir' ? `${d.size ? d.size/1000 : '?'}kb` : '(dir)');
+				return (
+					<li key={idx}>{
+						d.type!='dir' ? <a href={'./up/'+path+'/'+name} target='_blank'>{dsc}</a>
+						: <a onClick={() => setPath(path+'/'+name)}>{dsc}</a>
+					}</li>)
+			}) }
+		</ul>
+		</div>
+	</div>)
+}

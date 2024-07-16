@@ -71,7 +71,7 @@ export default defineConfig({
 			},
 		})],
 	build: {
-		//minify: false,
+		minify: process.env.DBG ? false : true,
 		commonjsOptions: { transformMixedEsModules: true },
 		rollupOptions: { output: { manualChunks }},
 	},

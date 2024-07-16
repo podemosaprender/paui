@@ -8,7 +8,7 @@ import { InputText } from './controls/InputText';
 
 //SEE: https://primereact.org/fileupload/#advanced
 
-export function Files() {
+export function Files({onFileEdit}) {
 	const [path, setPathImpl]= useState('');
 	const [files, setFiles]= useState({});
 	const toast = useRef(null);
@@ -24,7 +24,7 @@ export function Files() {
 	useEffect(() => { files_refresh(); }, [path])
 
 	const onUpload = () => {
-		toast.current.show({ severity: 'info', summary: 'Success', detail: 'Files eUploaded' });
+		toast.current.show({ severity: 'info', summary: 'Success', detail: 'Files Uploaded' });
 		files_refresh();
 	};
 
@@ -32,13 +32,16 @@ export function Files() {
 		e.formData.set('path',path); 
 		console.log("onBeforeUpload",e)
 	};
-	
+
+	const file_new = (e) => { onFileEdit(path);	}
+
 	return (<div>
 		<div className="card flex" style={{ alignItems: "end"}}>
 			<Toast ref={toast}></Toast>
 			<InputText value={path} setValue={setPath} label="path" />
 			<Button icon="pi pi-arrow-left" aria-label="on folder up" onClick={() => setPath(path.replace(/[^\/]+\/?$/,''))} />
 			<Button icon="pi pi-refresh" aria-label="refresh file list" onClick={files_refresh} />
+			<Button icon="pi pi-plus" aria-label="new file" onClick={file_new} />
 			<FileUpload 
 				onBeforeUpload={onBeforeUpload}
 				onUpload={onUpload} 
@@ -58,7 +61,11 @@ export function Files() {
 				let dsc= `${name || '.'} ${new Date(d.mtimeMs || d.ctimeMs).toLocaleString()} ` + (d.type!='dir' ? `${d.size ? d.size/1000 : '?'}kb` : '(dir)');
 				return (
 					<li key={idx}>{
-						d.type!='dir' ? <a href={'./up/'+path+'/'+name} target='_blank'>{dsc}</a>
+						d.type!='dir' ? (
+							name.match(/\.((txt)|(md)|(js)|(json)|(html)|(css))$/) 
+								? <a onClick={() => onFileEdit(path,name)}>{dsc}</a>
+								: <a href={'./up/'+path+'/'+name} target='_blank'>{dsc}</a>
+						)
 						: <a onClick={() => setPath(path+'/'+name)}>{dsc}</a>
 					}</li>)
 			}) }

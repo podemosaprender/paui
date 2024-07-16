@@ -1,15 +1,16 @@
 //INFO: toda la API aqui para poder desarrollar SIN SW primero pero despues usarla desde ahi
 
-//S: API { **************************************************
-import { genKeypairSign, exportKey, importKey, sign } from 'src/svc/crypto';
-import { fsp } from 'src/svc/git'
-
 const cacheName= 'media';
 const channelName= 'messages';
 const urlPrefix= '/_media/';
 
 const broadcastChannel = 'BroadcastChannel' in self ? new BroadcastChannel(channelName) : null;
 broadcastChannel.postMessage('startting')
+
+//S: API { **************************************************
+import { genKeypairSign, exportKey, importKey, sign } from 'src/svc/crypto';
+import { fsp } from 'src/svc/git'
+
 
 const ensure_dir= async (path) => {
 	let parts= path.split('/'); 
@@ -44,11 +45,13 @@ const _sign= async (msg,id) => {
 	return signed;
 }
 
-const shareTargetHandler = async ({event}) => {
+const fsWriteHandler= async ({url, request, event, params}) => {
   if (broadcastChannel) { broadcastChannel.postMessage('fsp saving'); }
 
+	let p= (url.pathname.match(/\/up\/(.*)/)||[])[1]||'' //A: remove prefix dir eg in gitpages
+
   const formData = await event.request.formData();
-	const path= formData.get('path') || '';
+	const path= formData.get('path') || p || '';
   const mediaFiles = formData.getAll('media');
 	console.log("_share_target",path,[... formData.keys() ]);
 
@@ -65,9 +68,9 @@ const shareTargetHandler = async ({event}) => {
 		try {
 			let fpath=dst+mediaFile.name;
 			await	fsp.writeFile(fpath, mediaFile);
-			console.log("shareTargetHandler fsp OK",fpath)
+			console.log("fsWriteHandler fsp OK",fpath)
   		if (broadcastChannel) { broadcastChannel.postMessage('fsp saved '+fpath); }
-		} catch (ex) { console.log("shareTargetHandler fsp",dst, mediaFiles.name,fpath,ex) }
+		} catch (ex) { console.log("fsWriteHandler fsp",dst, mediaFiles.name,fpath,ex) }
   }
 
   // Use the MIME type of the first file shared to determine where we redirect.
@@ -101,8 +104,9 @@ const fsReadHandler = async ({url, request, event, params}) => {
 };
 
 const api_registerRoutes= (registerRoute) => {
-	registerRoute( new RegExp('/_share-target'), shareTargetHandler, 'POST');
 	registerRoute( new RegExp('/up(/.*)?'), fsReadHandler);
+	registerRoute( new RegExp('/up(/.*)?'), fsWriteHandler, 'POST');
+	registerRoute( new RegExp('/_share-target'), fsWriteHandler, 'POST');
 }
 
 const api_onmessage= async (event) => {
@@ -120,7 +124,31 @@ const api_onmessage= async (event) => {
 }
 //S: API } **************************************************
 
+//S: CLIENT { ************************************************
+const apic_upload= async (name2bytes, path='') => {
+	let fd= new FormData()
+	Object.entries(name2bytes).forEach( ([n,s]) => fd.append('media', new File([s],n)))
+	let r= await fetch('./up/'+path, {method: 'POST', body: fd}).then(r => r.text())
+	return r;
+}
+
+const apic_set_file= async(fpath,content) => {
+	let p= fpath.split('/'), n= p.pop(), path= p.join('/');
+	return await apic_upload({[n]: content},path);
+}
+
+const apic_get_file= async (fpath) => (await fetch('/up/'+fpath).then(r=>r.text()))
+
+//S: CLIENT } ************************************************
+
 export { 
+	//COMMON
+	broadcastChannel, 
+	
+	//SERVICE
 	api_registerRoutes, api_onmessage,
-	broadcastChannel, cacheName, channelName, urlPrefix,
+	cacheName, channelName, urlPrefix,
+	
+	//CLIENT
+	apic_upload, apic_set_file, apic_get_file,
 }

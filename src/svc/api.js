@@ -9,8 +9,7 @@ broadcastChannel.postMessage('startting')
 
 //S: API { **************************************************
 import { genKeypairSign, exportKey, importKey, sign } from 'src/svc/crypto';
-import { fsp } from 'src/svc/git'
-
+import { fsp, clone } from 'src/svc/git'
 
 const ensure_dir= async (path) => {
 	let parts= path.split('/'); 
@@ -117,6 +116,8 @@ const api_onmessage= async (event) => {
 			r= {kp: ['pubkey','x'], v: pubk}
 		} else if (event.data?.cmd=='sign') { console.log("SIGN");
 			r= await _sign(...event.data.args);
+		} else if (event.data?.cmd=='git_clone') { console.log("GIT CLONE",event.data);
+			r= await clone(...event.data.args);
 		}
 	} catch (ex) { r= 'ERROR!!! '+ex; }
 	console.log("MSG R", r, event.source!=null, event);

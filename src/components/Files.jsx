@@ -8,6 +8,12 @@ import { InputText } from './controls/InputText';
 
 import { apic_get_file_blob } from 'src/svc/api';
 
+//XXX:MOVER_A_APP {
+import { open, send } from 'src/svc/net_peerjs';
+window.peeropen= open;
+window.peersend= send;
+//XXX:MOVER_A_APP }
+
 //XXX:MOVER_A_LIB {
 //SEE: https://gildas-lormeau.github.io/zip.js/
 import * as zip from '@zip.js/zip.js';

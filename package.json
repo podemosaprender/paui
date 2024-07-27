@@ -21,6 +21,7 @@
     "@uiw/codemirror-themes-all": "^4.21.21",
     "@uiw/react-codemirror": "^4.21.21",
     "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "@zip.js/zip.js": "^2.7.47",
     "comlink": "^4.4.1",
     "isomorphic-git": "^1.25.10",
     "mime-db": "^1.52.0",

@@ -6,8 +6,34 @@ import { FileUpload } from 'primereact/fileupload';
 
 import { InputText } from './controls/InputText';
 
-//SEE: https://primereact.org/fileupload/#advanced
+import { apic_get_file_blob } from 'src/svc/api';
 
+//XXX:MOVER_A_LIB {
+//SEE: https://gildas-lormeau.github.io/zip.js/
+import * as zip from '@zip.js/zip.js';
+const new_zip_model = (() => {
+	let zipWriter;
+	return {
+		addFile(file, options) {
+			if (!zipWriter) {
+				zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true });
+			}
+			return zipWriter.add(file.name, new zip.BlobReader(file), options);
+		},
+		async getBlobURL() {
+			if (zipWriter) {
+				const blobURL = URL.createObjectURL(await zipWriter.close());
+				zipWriter = null;
+				return blobURL;
+			} else { throw new Error("Zip file closed"); }
+		}
+	};
+})
+window.apic_get_file_blob= apic_get_file_blob;
+window.new_zip_model= new_zip_model;
+//XXX:MOVER_A_LIB }
+
+//SEE: https://primereact.org/fileupload/#advanced
 export function Files({onFileEdit}) {
 	const [path, setPathImpl]= useState('');
 	const [files, setFiles]= useState({});
@@ -35,6 +61,18 @@ export function Files({onFileEdit}) {
 
 	const file_new = (e) => { onFileEdit(path);	}
 
+	const zip_new = async (e) => { //XXX:elegir archivos
+		const zip= new_zip_model();
+		await Promise.all( Object.entries( files ).map( async ([fn,fd]) => {
+			if (fd.type!='dir') {
+				let bytes= await apic_get_file_blob(path+'/'+fn);
+				await zip.addFile(new File([bytes],fn))
+			}
+		}) );
+		let url= await zip.getBlobURL();
+		window.open(url);
+	}
+
 	return (<div>
 		<div className="card flex" style={{ alignItems: "end"}}>
 			<Toast ref={toast}></Toast>
@@ -42,6 +80,7 @@ export function Files({onFileEdit}) {
 			<Button icon="pi pi-arrow-left" aria-label="on folder up" onClick={() => setPath(path.replace(/[^\/]+\/?$/,''))} />
 			<Button icon="pi pi-refresh" aria-label="refresh file list" onClick={files_refresh} />
 			<Button icon="pi pi-plus" aria-label="new file" onClick={file_new} />
+			<Button icon="pi pi-window-minimize" aria-label="zip" onClick={zip_new} />
 			<FileUpload 
 				onBeforeUpload={onBeforeUpload}
 				onUpload={onUpload} 

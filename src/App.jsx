@@ -14,6 +14,7 @@ import { EditorPalette } from 'src/components/EditorPalette';
 
 import { ensure_kv } from 'src/svc/util';
 import { broadcastChannel, apic_upload, apic_set_file, apic_get_file } from 'src/svc/api';
+window.apic_get_file= apic_get_file;
 
 //import { fsp } from './svc/git'
 import { speech_from_text_p } from 'src/svc/speech-from-text'

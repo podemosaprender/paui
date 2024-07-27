@@ -139,6 +139,7 @@ const apic_set_file= async(fpath,content) => {
 }
 
 const apic_get_file= async (fpath) => (await fetch('/up/'+fpath).then(r=>r.text()))
+const apic_get_file_blob= async (fpath) => (await fetch('/up/'+fpath).then(r=>r.blob()))
 
 //S: CLIENT } ************************************************
 
@@ -151,5 +152,5 @@ export {
 	cacheName, channelName, urlPrefix,
 	
 	//CLIENT
-	apic_upload, apic_set_file, apic_get_file,
+	apic_upload, apic_set_file, apic_get_file, apic_get_file_blob,
 }

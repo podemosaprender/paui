@@ -13,14 +13,9 @@ import { FormFromSchema } from 'src/components/FormFromSchema2';
 import { EditorPalette } from 'src/components/EditorPalette';
 
 import { ensure_kv } from 'src/svc/util';
-import { broadcastChannel, apic_upload, apic_set_file, apic_get_file } from 'src/svc/api';
-window.apic_get_file= apic_get_file;
+import { broadcastChannel, apic_upload, apic_set_file, apic_get_file, apic_call } from 'src/svc/api';
 
-//import { fsp } from './svc/git'
 import { speech_from_text_p } from 'src/svc/speech-from-text'
-//import * as crypto from 'src/svc/crypto';
-// window.mycrypto= crypto;
-
 
 async function handleFiles(files) {
 	for (const file of files) {
@@ -35,12 +30,6 @@ if ('launchQueue' in window) { console.log('File Handling API is supported!');
 } else { console.error('File Handling API is not supported!'); }
 
 broadcastChannel.onmessage= (...a) => console.log("ch onmsg", a)
-
-const listeners_= {};
-navigator.serviceWorker.onmessage= (m) => {
-	console.log("MM",m);
-	Object.values(listeners_).forEach( cb => { try{ cb(m) }catch(ex){}} )
-}
 
 export default function Menu({options, value, setValue}) {
 	const options_kv= ensure_kv(options);
@@ -64,11 +53,11 @@ export function App() {
 	const [txt,setTxt]= useState('')
 
 	useEffect(() => {
-		if (view=='key') { //XXX:LIB
-			listeners_['pk']= (m) => {console.log("CMP LIS", m); let pk= m.data.v; console.log({pk},pk.length); setPk(pk); }
-			if (!pk) { navigator.serviceWorker.controller.postMessage({cmd:"pubkey"}) }
+		if (view=='key' && !pk) { 
+			apic_call('key_pub',['k']).then( (m) => {
+				console.log("CMP key_pub", m); let pk= m.data.v; console.log({pk},pk.length); setPk(pk); 
+			});
 		}
-		return () => {delete listeners_['pk']}
 	},[view]);
 
 	const onFileEdit= async (path,fname) => {

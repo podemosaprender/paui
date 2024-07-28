@@ -38,7 +38,7 @@ const _sign= async (msg,id) => {
 	let pubk_s= await _key_for(id);
 	let privk_s= await _key_for(id,'');
 	let privk= await importKey(privk_s,['sign']);
-	let m= {i: "xtest1", k: pubk_s.substr(0,32), t: new Date().toJSON(), ch: 'xtest-s1', d: msg } //XXX:params!
+	let m= {i: "xtest1", ch: 'xtest-s1', k: pubk_s.substr(0,32), t: new Date().toJSON(), d: msg }; //XXX:params!
 	let signed= await sign(m, privk)
 	console.log("SIGNED",signed);
 	return signed;
@@ -108,20 +108,23 @@ const api_registerRoutes= (registerRoute) => {
 	registerRoute( new RegExp('/_share-target'), fsWriteHandler, 'POST');
 }
 
+const ApiCmd_= {};
+ApiCmd_.key_pub= (kname) => _key_for(kname,t='.pub')
+ApiCmd_.key_sign= _sign; //XXX:SEC
+ApiCmd_.git_clone= clone;
+
 const api_onmessage= async (event) => {
-	let r= null;
+	let {cmd,args,reqId}= event.data || {cmd:'UNKNOWN'};
+	args= args || [];
+	let r= 'ERROR UnknownCmd '+cmd; //DFLT
 	try {
-		if (event.data?.cmd=='pubkey') { console.log("PK");
-			let pubk= await _key_for('k');
-			r= {kp: ['pubkey','x'], v: pubk}
-		} else if (event.data?.cmd=='sign') { console.log("SIGN");
-			r= await _sign(...event.data.args);
-		} else if (event.data?.cmd=='git_clone') { console.log("GIT CLONE",event.data);
-			r= await clone(...event.data.args);
+		let h= ApiCmd_[cmd]; if (h) { 
+			r= h(...args);
+			if (r instanceof Promise) { r= await r; }
 		}
 	} catch (ex) { r= 'ERROR!!! '+ex; }
-	console.log("MSG R", r, event.source!=null, event);
-	return r;
+	console.log("MSG R", r, event.source!=null, Object.keys(ApiCmd_), event);
+	return { kp: [cmd, ...args], v: r, reqId }
 }
 //S: API } **************************************************
 
@@ -141,6 +144,29 @@ const apic_set_file= async(fpath,content) => {
 const apic_get_file= async (fpath) => (await fetch('/up/'+fpath).then(r=>r.text()))
 const apic_get_file_blob= async (fpath) => (await fetch('/up/'+fpath).then(r=>r.blob()))
 
+const listeners_= {};
+const swOnMessage_= (m) => { console.log("API onSWMessage_",m);
+	Object.values(listeners_).forEach( cb => { try{ cb(m) }catch(ex){}} )
+}
+const apic_set_listener= (k,cb) => { 
+	navigator.serviceWorker.onmessage= swOnMessage_; //A:idempotent
+	if (cb) { listeners_[k]= cb; }
+	else { delete listeners_[k]; }
+}
+
+let ListenerIdCnt_= 1;
+const apic_call= (cmd, args, cb, listenerId) => {
+	let listenerIdOk= listenerId || (cmd+'__'+(ListenerIdCnt_++));
+	let rp= new Promise( (onOk, onErr) => {
+		apic_set_listener(listenerIdOk, (apir) => {
+			if (!listenerId) apic_set_listener(listenerIdOk,null); //A:no id=not permanent, delete from listeners
+			if (cb) { try{ cb(apir) }catch{} };
+			onOk(apir);
+		})
+	});	
+	navigator.serviceWorker.controller.postMessage({cmd,args,listenerIdOk}); 
+	return rp;
+}
 //S: CLIENT } ************************************************
 
 export { 
@@ -153,4 +179,5 @@ export {
 	
 	//CLIENT
 	apic_upload, apic_set_file, apic_get_file, apic_get_file_blob,
+	apic_set_listener, apic_call,
 }

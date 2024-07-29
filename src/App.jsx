@@ -11,6 +11,7 @@ import { QRScan } from 'src/components/QRScan';
 import { Files } from 'src/components/Files';
 import { FormFromSchema } from 'src/components/FormFromSchema2';
 import { EditorPalette } from 'src/components/EditorPalette';
+import { Gastos } from 'src/components/Gastos';
 
 import { ensure_kv } from 'src/svc/util';
 import { broadcastChannel, apic_upload, apic_set_file, apic_get_file, apic_call } from 'src/svc/api';
@@ -81,11 +82,12 @@ export function App() {
 					view=='editor' ? <Editor value={txt} onChange={onChange}/> :
 					view=='form' ? <FormFromSchema /> :
 					view=='palette' ?	<EditorPalette /> : 
+					view=='gastos' ?	<Gastos /> : 
 					view=='files' ? <Files onFileEdit={onFileEdit} /> :
 					<h3>Unknown view {view}</h3>
 				}
 			</div>
-			<Menu options={['files','key','qrscan','editor','form','palette', ...Object.keys(menu)]} setValue={setView} value={view} />
+			<Menu options={['files','key','qrscan','editor','form','palette', 'gastos', ...Object.keys(menu)]} setValue={setView} value={view} />
 			<PWABadge/>
 		</div>
 	)

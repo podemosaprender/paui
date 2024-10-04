@@ -18,6 +18,7 @@ import { broadcastChannel, apic_upload, apic_set_file, apic_get_file, apic_call 
 
 import { speech_from_text_p } from 'src/svc/speech-from-text'
 
+// PWA handle files { XXX:LIB
 async function handleFiles(files) {
 	for (const file of files) {
 		const blob = await file.getFile();
@@ -29,6 +30,7 @@ async function handleFiles(files) {
 if ('launchQueue' in window) { console.log('File Handling API is supported!');
 	launchQueue.setConsumer(launchParams => { handleFiles(launchParams.files); });
 } else { console.error('File Handling API is not supported!'); }
+// PWA handle files }
 
 broadcastChannel.onmessage= (...a) => console.log("ch onmsg", a)
 

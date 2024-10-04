@@ -37,6 +37,8 @@ const new_zip_model = (() => {
 })
 window.apic_get_file_blob= apic_get_file_blob;
 window.new_zip_model= new_zip_model;
+async function xgz(fcnt,ecnt) { xz= new_zip_model(); for (i=0;i<fcnt;i++) { if (i%1000==0) { console.log(i); } let a= []; for (j=0;j<ecnt;j++) {a.push("F"+i+":"+Math.random())}; await xz.addFile(new File([JSON.stringify(a)],"file"+i)) } }
+async function xgzt ()  { await xgz(1000,3000); window.open(await xz.getBlobURL()) }
 //XXX:MOVER_A_LIB }
 
 //SEE: https://primereact.org/fileupload/#advanced

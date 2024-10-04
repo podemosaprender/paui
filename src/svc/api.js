@@ -5,7 +5,7 @@ const channelName= 'messages';
 const urlPrefix= '/_media/';
 
 const broadcastChannel = 'BroadcastChannel' in self ? new BroadcastChannel(channelName) : null;
-broadcastChannel.postMessage('startting')
+broadcastChannel.postMessage('API starting')
 
 //S: API { **************************************************
 import { genKeypairSign, exportKey, importKey, sign } from 'src/svc/crypto';
@@ -109,7 +109,7 @@ const api_registerRoutes= (registerRoute) => {
 }
 
 const ApiCmd_= {};
-ApiCmd_.key_pub= (kname) => _key_for(kname,t='.pub')
+ApiCmd_.key_pub= (kname) => _key_for(kname,'.pub')
 ApiCmd_.key_sign= _sign; //XXX:SEC
 ApiCmd_.git_clone= clone;
 
@@ -122,13 +122,26 @@ const api_onmessage= async (event) => {
 			r= h(...args);
 			if (r instanceof Promise) { r= await r; }
 		}
-	} catch (ex) { r= 'ERROR!!! '+ex; }
+	} catch (ex) { r= 'ERROR!!! '+ex; console.error("api_onmessage",ex);}
 	console.log("MSG R", r, event.source!=null, Object.keys(ApiCmd_), event);
 	return { kp: [cmd, ...args], v: r, reqId }
 }
 //S: API } **************************************************
 
 //S: CLIENT { ************************************************
+var Worker_;
+const apic_worker= () => { //A: return serviceWorker if available, init regular worker if not
+	if (navigator.serviceWorker.controller) {
+		return navigator.serviceWorker.controller;
+	} else {
+		if (! Worker_) {
+			Worker_= new Worker(new URL('./sw-nonpwa.js', import.meta.url), { type: 'module', })
+			window.xwk= Worker_;
+		}
+		return Worker_;
+	}
+}
+
 const apic_upload= async (name2bytes, path='') => {
 	let fd= new FormData()
 	Object.entries(name2bytes).forEach( ([n,s]) => fd.append('media', new File([s],n)))
@@ -149,7 +162,7 @@ const swOnMessage_= (m) => { console.log("API onSWMessage_",m);
 	Object.values(listeners_).forEach( cb => { try{ cb(m) }catch(ex){}} )
 }
 const apic_set_listener= (k,cb) => { 
-	navigator.serviceWorker.onmessage= swOnMessage_; //A:idempotent
+	apic_worker().onmessage= swOnMessage_; //A:idempotent
 	if (cb) { listeners_[k]= cb; }
 	else { delete listeners_[k]; }
 }
@@ -159,12 +172,14 @@ const apic_call= (cmd, args, cb, listenerId) => {
 	let listenerIdOk= listenerId || (cmd+'__'+(ListenerIdCnt_++));
 	let rp= new Promise( (onOk, onErr) => {
 		apic_set_listener(listenerIdOk, (apir) => {
+			console.log("apic_call RET",apir);
 			if (!listenerId) apic_set_listener(listenerIdOk,null); //A:no id=not permanent, delete from listeners
 			if (cb) { try{ cb(apir) }catch{} };
 			onOk(apir);
 		})
 	});	
-	navigator.serviceWorker.controller.postMessage({cmd,args,listenerIdOk}); 
+	console.log("apic_call SEND",{cmd,args})
+	apic_worker().postMessage({cmd,args,listenerIdOk}); 
 	return rp;
 }
 //S: CLIENT } ************************************************

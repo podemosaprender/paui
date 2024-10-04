@@ -6,7 +6,7 @@ import { FileUpload } from 'primereact/fileupload';
 
 import { InputText } from './controls/InputText';
 
-import { apic_get_file_blob } from 'src/svc/api';
+import { apic_get_file, apic_upload, apic_get_file_blob } from 'src/svc/api';
 
 //XXX:MOVER_A_APP {
 import { open, send } from 'src/svc/net_peerjs';
@@ -50,7 +50,7 @@ export function Files({onFileEdit}) {
 	const setPath= (p) => { setPathImpl(p.replace(/\/+/g,'/')); }
 
 	const files_refresh= async () => {try{
-		let l= await fetch('./up/'+path).then( res => res.text() )
+		let l= await apic_get_file('./up/'+path);
 		console.log("files_refresh",l)
 		setFiles(JSON.parse(l));
 	}catch(ex){console.log("files_refresh",ex)}}
@@ -65,6 +65,12 @@ export function Files({onFileEdit}) {
 	const onBeforeUpload = (e) => { 
 		e.formData.set('path',path); 
 		console.log("onBeforeUpload",e)
+	};
+
+	const uploadHandler = async (e) => {
+		let name2file= {};
+		e.files.forEach( f => (name2file[f.name]=f) )
+		await apic_upload(name2file,'');
 	};
 
 	const file_new = (e) => { onFileEdit(path);	}
@@ -90,6 +96,8 @@ export function Files({onFileEdit}) {
 			<Button icon="pi pi-plus" aria-label="new file" onClick={file_new} />
 			<Button icon="pi pi-window-minimize" aria-label="zip" onClick={zip_new} />
 			<FileUpload 
+				customUpload={true}
+				uploadHandler={uploadHandler}
 				onBeforeUpload={onBeforeUpload}
 				onUpload={onUpload} 
 				url="./_share-target" 

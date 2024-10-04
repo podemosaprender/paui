@@ -11,10 +11,12 @@ broadcastChannel.postMessage('API starting')
 import { genKeypairSign, exportKey, importKey, sign } from 'src/svc/crypto';
 import { fsp, clone } from 'src/svc/git'
 
+self.xfsp= fsp;
+
 const ensure_dir= async (path) => {
 	let parts= path.split('/'); 
 	for (let i=1, cur=''; i<parts.length; i++) { cur+='/'+parts[i];
-		try { await fsp.mkdir(cur) } catch (ex) { console.log("fsp mkdir maybeOK",cur,path, ex) } ;
+		try { await fsp.mkdir(cur) } catch (ex) { console.log("fsp mkdir maybeOK",cur,path,ex) } ;
 	}
 }
 
@@ -44,15 +46,15 @@ const _sign= async (msg,id) => {
 	return signed;
 }
 
-const fsWriteHandler= async ({url, request, event, params}) => {
+const fsWriteHandler= async ({url, eventOrKV, noResponse}) => {
   if (broadcastChannel) { broadcastChannel.postMessage('fsp saving'); }
 
 	let p= (url.pathname.match(/\/up\/(.*)/)||[])[1]||'' //A: remove prefix dir eg in gitpages
 
-  const formData = await event.request.formData();
-	const path= formData.get('path') || p || '';
-  const mediaFiles = formData.getAll('media');
-	console.log("_share_target",path,[... formData.keys() ]);
+	const formData = Array.isArray(eventOrKV.media) ? null : await event.request.formData();
+	const path= (formData ? formData.get('path') : eventOrKV.path ) || p || '';
+	const mediaFiles = (formData ? formData.getAll('media') : eventOrKV.media);
+	console.log("fsWriteHandler",path);
 
 	const dst= '/up/'+path+'/';
 	await ensure_dir(dst);	
@@ -76,30 +78,33 @@ const fsWriteHandler= async ({url, request, event, params}) => {
 	const routeToRedirectTo = null; //XXX: let app decide and inform user
 	const redirectionUrl = routeToRedirectTo ? `/#${routeToRedirectTo.href}` : '/'; //XXX:HC
 
-	return Response.redirect(redirectionUrl, 303); //A: After the POST succeeds, redirect to the main page.
+	return noResponse ? true : Response.redirect(redirectionUrl, 303); //A: After the POST succeeds, redirect to the main page.
 };
 
-const fsReadHandler = async ({url, request, event, params}) => {
-	let p= (url.pathname.match(/\/up.*/)||[])[0] //A: remove prefix dir eg in gitpages
+const fsReadHandler = async ({url, noResponse}) => {
+	let r= "ERROR"; //DFLT
+	let p= (url.pathname.match(/\/up.*/)||['/up/'+url.pathname])[0] //A: ensure prefix dir
 	try {
 		let stat= await fsp.stat(p);
+		console.log("fsReadHandler STAT",p,stat);
 		if (stat.isDirectory()) {
-			let r= ['EMPTY']; //DFTL
+			console.log("fsReadHandler isDir",p,stat);
+			let rdir= ['EMPTY']; //DFTL
 			try {
 				let names= await fsp.readdir(p);
-				r= {}
+				rdir= {}
 				await Promise.all(names.map(async (n) => {
 					let d= await fsp.stat(p+'/'+n);
-					r[n]= {name: n, type: d.type, size: d.size, mtimeMs: d.mtimeMs, ctimeMs: d.ctimeMs, isSymlink: d.isSymbolicLink()}
+					rdir[n]= {name: n, type: d.type, size: d.size, mtimeMs: d.mtimeMs, ctimeMs: d.ctimeMs, isSymlink: d.isSymbolicLink()}
 				}));
 			} catch(ex) {console.log("fsReadHandler readDir ERROR",p,ex)}
-			return new Response(JSON.stringify(r));
+			r= JSON.stringify(rdir);
 		} else {
-			let f= await fsp.readFile(p);
-			return new Response(f);
+			r= await fsp.readFile(p);
 		}
-	} catch (ex) {return new Response('fsReadHandler ERROR: '+ex);}
-	return new Response("fsReadHandler ERROR: can't read "+p);
+	} catch (ex) { r= 'fsReadHandler ERROR: '+ex; console.log('fsReadHandler ERROR 2',p,ex); }
+	if (typeof(r)=='string' && r=='ERROR') { r="fsReadHandler ERROR: can't read "+p }
+	return noResponse ? r : new Response(r);
 };
 
 const api_registerRoutes= (registerRoute) => {
@@ -112,6 +117,8 @@ const ApiCmd_= {};
 ApiCmd_.key_pub= (kname) => _key_for(kname,'.pub')
 ApiCmd_.key_sign= _sign; //XXX:SEC
 ApiCmd_.git_clone= clone;
+ApiCmd_.get_file= fsReadHandler
+ApiCmd_.set_file= fsWriteHandler
 
 const api_onmessage= async (event) => {
 	let {cmd,args,reqId}= event.data || {cmd:'UNKNOWN'};
@@ -142,20 +149,6 @@ const apic_worker= () => { //A: return serviceWorker if available, init regular 
 	}
 }
 
-const apic_upload= async (name2bytes, path='') => {
-	let fd= new FormData()
-	Object.entries(name2bytes).forEach( ([n,s]) => fd.append('media', new File([s],n)))
-	let r= await fetch('./up/'+path, {method: 'POST', body: fd}).then(r => r.text())
-	return r;
-}
-
-const apic_set_file= async(fpath,content) => {
-	let p= fpath.split('/'), n= p.pop(), path= p.join('/');
-	return await apic_upload({[n]: content},path);
-}
-
-const apic_get_file= async (fpath) => (await fetch('/up/'+fpath).then(r=>r.text()))
-const apic_get_file_blob= async (fpath) => (await fetch('/up/'+fpath).then(r=>r.blob()))
 
 const listeners_= {};
 const swOnMessage_= (m) => { console.log("API onSWMessage_",m);
@@ -182,6 +175,24 @@ const apic_call= (cmd, args, cb, listenerId) => {
 	apic_worker().postMessage({cmd,args,listenerIdOk}); 
 	return rp;
 }
+
+const apic_upload= async (name2bytes, path='') => {
+	let fd= {media:[]}
+	Object.entries(name2bytes).forEach( ([n,s]) => fd.media.push( s instanceof File ? s : new File([s],n)))
+	let r= await apic_call('set_file',[{url:{pathname: path}, eventOrKV: fd, noResponse: true}]);
+	return r.data.v;
+}
+
+const apic_set_file= async(fpath,content) => {
+	let p= fpath.split('/'), n= p.pop(), path= p.join('/');
+	return await apic_upload({[n]: content},path);
+}
+
+const apic_get_file_impl_= async (fpath) => (
+	(await apic_call('get_file', [{url:{pathname: fpath}, noResponse: true}])).data.v
+);
+const apic_get_file= async (fpath) => (await apic_get_file_impl_(fpath).then(r=> (r.text ? r.text() : r)))
+const apic_get_file_blob= async (fpath) => (await apic_get_file_impl_(fpath).then(r=>r.blob()))
 //S: CLIENT } ************************************************
 
 export { 

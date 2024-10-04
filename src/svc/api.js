@@ -184,7 +184,7 @@ const apic_upload= async (name2bytes, path='') => {
 	let fd= {media:[]}
 	Object.entries(name2bytes).forEach( ([n,s]) => fd.media.push( s instanceof File ? s : new File([s],n)))
 	let r= await apic_call('set_file',[{url:{pathname: path}, eventOrKV: fd, noResponse: true}]);
-	return r.data.v;
+	return r;
 }
 
 const apic_set_file= async(fpath,content) => {

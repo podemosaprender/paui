@@ -151,7 +151,7 @@ const apic_worker= () => { //A: return serviceWorker if available, init regular 
 
 
 const listeners_= {};
-const swOnMessage_= (m) => { console.log("API onSWMessage_",m);
+const swOnMessage_= (m) => { console.log("API swOnMessage_",m);
 	Object.values(listeners_).forEach( cb => { try{ cb(m) }catch(ex){}} )
 }
 const apic_set_listener= (k,cb) => { 
@@ -162,17 +162,21 @@ const apic_set_listener= (k,cb) => {
 
 let ListenerIdCnt_= 1;
 const apic_call= (cmd, args, cb, listenerId) => {
-	let listenerIdOk= listenerId || (cmd+'__'+(ListenerIdCnt_++));
+	let listenerIdOk= listenerId || ('tmp__'+cmd+'__'+(ListenerIdCnt_++));
 	let rp= new Promise( (onOk, onErr) => {
-		apic_set_listener(listenerIdOk, (apir) => {
-			console.log("apic_call RET",apir);
-			if (!listenerId) apic_set_listener(listenerIdOk,null); //A:no id=not permanent, delete from listeners
-			if (cb) { try{ cb(apir) }catch{} };
-			onOk(apir);
-		})
+		apic_set_listener(listenerIdOk, (apir) => {try{
+			let reqId= apir?.data?.reqId || '';
+			console.log("apic_call RET",reqId, listenerIdOk, apir);
+			if (reqId==listenerIdOk) { //A: for us
+				if (listenerIdOk.startsWith('tmp__')) apic_set_listener(listenerIdOk,null); //A: not permanent, delete from listeners
+				let data= apir.data.v;
+				if (cb) { try{ cb(data) }catch{} };
+				onOk(data);
+			}
+		}catch(ex){console.log("apic_call RET handler ERROR",ex)}})
 	});	
 	console.log("apic_call SEND",{cmd,args})
-	apic_worker().postMessage({cmd,args,listenerIdOk}); 
+	apic_worker().postMessage({cmd,args,reqId: listenerIdOk}); 
 	return rp;
 }
 
@@ -189,10 +193,10 @@ const apic_set_file= async(fpath,content) => {
 }
 
 const apic_get_file_impl_= async (fpath) => (
-	(await apic_call('get_file', [{url:{pathname: fpath}, noResponse: true}])).data.v
+	(await apic_call('get_file', [{url:{pathname: fpath}, noResponse: true}]))
 );
 const apic_get_file= async (fpath) => (await apic_get_file_impl_(fpath).then(r=> (r.text ? r.text() : r)))
-const apic_get_file_blob= async (fpath) => (await apic_get_file_impl_(fpath).then(r=>r.blob()))
+const apic_get_file_blob= async (fpath) => (await apic_get_file_impl_(fpath)) //A: File <= Blob
 //S: CLIENT } ************************************************
 
 export { 

@@ -87,6 +87,12 @@ export function Files({onFileEdit}) {
 		window.open(url);
 	}
 
+	const onFileView= async (path,name) => {
+		let blob= await apic_get_file_blob(path+'/'+name)
+		let u= URL.createObjectURL(blob);
+		window.open(u,path+name);
+	}
+
 	return (<div>
 		<div className="card flex" style={{ alignItems: "end"}}>
 			<Toast ref={toast}></Toast>
@@ -119,7 +125,7 @@ export function Files({onFileEdit}) {
 						d.type!='dir' ? (
 							name.match(/\.((txt)|(md)|(js)|(json)|(html)|(css))$/) 
 								? <a onClick={() => onFileEdit(path,name)}>{dsc}</a>
-								: <a href={'./up/'+path+'/'+name} target='_blank'>{dsc}</a>
+								: <a onClick={() => onFileView(path,name)}>{dsc}</a>
 						)
 						: <a onClick={() => setPath(path+'/'+name)}>{dsc}</a>
 					}</li>)

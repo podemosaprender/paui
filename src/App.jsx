@@ -12,6 +12,7 @@ import { Files } from 'src/components/Files';
 import { FormFromSchema } from 'src/components/FormFromSchema2';
 import { EditorPalette } from 'src/components/EditorPalette';
 import { Gastos } from 'src/components/Gastos';
+import { Generator } from 'src/components/Generator';
 
 import { ensure_kv } from 'src/svc/util';
 import { broadcastChannel, apic_upload, apic_set_file, apic_get_file, apic_call } from 'src/svc/api';
@@ -58,7 +59,7 @@ export function App() {
 	useEffect(() => {
 		if (view=='key' && !pk) { 
 			apic_call('key_pub',['k']).then( (m) => {
-				console.log("CMP key_pub", m); let pk= m.data.v; console.log({pk},pk.length); setPk(pk); 
+				console.log("CMP key_pub", m); let pk= m; console.log({pk},pk.length); setPk(pk); 
 			});
 		}
 	},[view]);
@@ -86,10 +87,11 @@ export function App() {
 					view=='palette' ?	<EditorPalette /> : 
 					view=='gastos' ?	<Gastos /> : 
 					view=='files' ? <Files onFileEdit={onFileEdit} /> :
+					view=='generator' ? <Generator /> :
 					<h3>Unknown view {view}</h3>
 				}
 			</div>
-			<Menu options={['files','key','qrscan','editor','form','palette', 'gastos', ...Object.keys(menu)]} setValue={setView} value={view} />
+			<Menu options={['files','key','qrscan','editor','form','palette', 'gastos', 'generator', ...Object.keys(menu)]} setValue={setView} value={view} />
 			<PWABadge/>
 		</div>
 	)

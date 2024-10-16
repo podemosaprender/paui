@@ -166,7 +166,7 @@ const apic_call= (cmd, args, cb, listenerId) => {
 	let rp= new Promise( (onOk, onErr) => {
 		apic_set_listener(listenerIdOk, (apir) => {try{
 			let reqId= apir?.data?.reqId || '';
-			console.log("apic_call RET",reqId, listenerIdOk, apir);
+			//DBG: console.log("apic_call RET",reqId, listenerIdOk, apir);
 			if (reqId==listenerIdOk) { //A: for us
 				if (listenerIdOk.startsWith('tmp__')) apic_set_listener(listenerIdOk,null); //A: not permanent, delete from listeners
 				let data= apir.data.v;
@@ -175,14 +175,18 @@ const apic_call= (cmd, args, cb, listenerId) => {
 			}
 		}catch(ex){console.log("apic_call RET handler ERROR",ex)}})
 	});	
-	console.log("apic_call SEND",{cmd,args})
+	//DBG: console.log("apic_call SEND",{cmd,args})
 	apic_worker().postMessage({cmd,args,reqId: listenerIdOk}); 
 	return rp;
 }
 
 const apic_upload= async (name2bytes, path='') => {
 	let fd= {media:[]}
-	Object.entries(name2bytes).forEach( ([n,s]) => fd.media.push( s instanceof File ? s : new File([s],n)))
+	Object.entries(name2bytes).forEach( ([n,s]) => {
+		let f= s instanceof File ? s : new File([s],n)
+		console.log("apic_upload",n,f);
+		fd.media.push( f );
+	})
 	let r= await apic_call('set_file',[{url:{pathname: path}, eventOrKV: fd, noResponse: true}]);
 	return r;
 }

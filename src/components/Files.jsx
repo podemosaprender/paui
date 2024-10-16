@@ -7,6 +7,7 @@ import { FileUpload } from 'primereact/fileupload';
 import { InputText } from './controls/InputText';
 
 import { apic_get_file, apic_upload, apic_get_file_blob } from 'src/svc/api';
+import { new_zip_model } from 'src/svc/zip';
 
 //XXX:MOVER_A_APP {
 import { open, send } from 'src/svc/net_peerjs';
@@ -14,31 +15,28 @@ window.peeropen= open;
 window.peersend= send;
 //XXX:MOVER_A_APP }
 
+//
 //XXX:MOVER_A_LIB {
-//SEE: https://gildas-lormeau.github.io/zip.js/
-import * as zip from '@zip.js/zip.js';
-const new_zip_model = (() => {
-	let zipWriter;
-	return {
-		addFile(file, options) {
-			if (!zipWriter) {
-				zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true });
-			}
-			return zipWriter.add(file.name, new zip.BlobReader(file), options);
-		},
-		async getBlobURL() {
-			if (zipWriter) {
-				const blobURL = URL.createObjectURL(await zipWriter.close());
-				zipWriter = null;
-				return blobURL;
-			} else { throw new Error("Zip file closed"); }
-		}
-	};
-})
-window.apic_get_file_blob= apic_get_file_blob;
-window.new_zip_model= new_zip_model;
-async function xgz(fcnt,ecnt) { xz= new_zip_model(); for (i=0;i<fcnt;i++) { if (i%1000==0) { console.log(i); } let a= []; for (j=0;j<ecnt;j++) {a.push("F"+i+":"+Math.random())}; await xz.addFile(new File([JSON.stringify(a)],"file"+i)) } }
-async function xgzt ()  { await xgz(1000,3000); window.open(await xz.getBlobURL()) }
+//SEE: https://writingjavascript.com/how-to-extract-pdf-data-with-pdfjs
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs' //XXX:symlink en public de node_modules
+async function pdf(path,name) {try{
+	let blob= await apic_get_file_blob(path+'/'+name);
+	const buffer= await new Response(blob).arrayBuffer();
+	const pdf= await getDocument({data: buffer}).promise;
+	window.pdf= pdf;
+	console.log("pdf",pdf);
+	let p_cnt= pdf.numPages;
+	console.log("pdf numPages",p_cnt);
+	let s='';
+	for (let i=1;i < p_cnt; i++) {
+		let p= await pdf.getPage(i);
+		let el= await p.getTextContent();
+		console.log("page items", i, el.items);
+		s += el.items.map(it => (it.str || '')).join('\n');
+	}
+	console.log(s);
+}catch(ex){console.log("pdf",ex)}}
 //XXX:MOVER_A_LIB }
 
 //SEE: https://primereact.org/fileupload/#advanced
@@ -75,7 +73,7 @@ export function Files({onFileEdit}) {
 
 	const file_new = (e) => { onFileEdit(path);	}
 
-	const zip_new = async (e) => { //XXX:elegir archivos
+	const zip_new = async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
 		const zip= new_zip_model();
 		await Promise.all( Object.entries( files ).map( async ([fn,fd]) => {
 			if (fd.type!='dir') {
@@ -86,6 +84,9 @@ export function Files({onFileEdit}) {
 		let url= await zip.getBlobURL();
 		window.open(url);
 	}
+
+	const onPDF= pdf;
+	
 
 	const onFileView= async (path,name) => {
 		let blob= await apic_get_file_blob(path+'/'+name)
@@ -107,7 +108,6 @@ export function Files({onFileEdit}) {
 				onBeforeUpload={onBeforeUpload}
 				onUpload={onUpload} 
 				url="./_share-target" 
-				maxFileSize={10000000} 
 				accept="*|*/*" 
 			  multiple  auto
 				mode="basic" 
@@ -123,8 +123,10 @@ export function Files({onFileEdit}) {
 				return (
 					<li key={idx}>{
 						d.type!='dir' ? (
-							name.match(/\.((txt)|(md)|(js)|(json)|(html)|(css))$/) 
+							name.match(/\.((txt)|(md)|(js)|(json)|(yaml)|(html)|(css))$/) 
 								? <a onClick={() => onFileEdit(path,name)}>{dsc}</a>
+								: name.match(/\.pdf$/) 
+								? <a onClick={() => onPDF(path,name)}>(PDF) {dsc}</a>
 								: <a onClick={() => onFileView(path,name)}>{dsc}</a>
 						)
 						: <a onClick={() => setPath(path+'/'+name)}>{dsc}</a>

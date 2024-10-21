@@ -64,6 +64,11 @@ export function Files({onFileEdit}) {
 		}}
 	}
 
+	const onSelectAll= () => {
+		if (selected.length) { setSelected([]) }
+		else { setSelected(Object.keys(files)) }
+	}
+
 	const setPath= (p) => { setPathImpl(p.replace(/\/+/g,'/')); }
 
 	const files_refresh= async () => {try{
@@ -138,7 +143,8 @@ export function Files({onFileEdit}) {
 				name="media" 
 				chooseOptions={{ icon: 'pi pi-upload', iconOnly: true, label: 'upload' }}
 			/>
-			<Button icon="pi pi-trash" aria-label="zip" onClick={onDelete} />
+			<Button icon="pi pi-check" aria-label="select all" onClick={onSelectAll} />
+			<Button icon="pi pi-trash" aria-label="delete" onClick={onDelete} />
 		</div>  
 		<div className="card flex">
 		<ul>

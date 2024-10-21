@@ -5,8 +5,9 @@ import { Toast } from 'primereact/toast';
 import { FileUpload } from 'primereact/fileupload';
 
 import { InputText } from './controls/InputText';
+import { ToggleButton } from 'primereact/togglebutton'
 
-import { apic_get_file, apic_upload, apic_get_file_blob } from 'src/svc/api';
+import { apic_get_file, apic_get_file_blob, apic_upload, apic_rm_file } from 'src/svc/api';
 import { new_zip_model } from 'src/svc/zip';
 
 //XXX:MOVER_A_APP {
@@ -39,11 +40,29 @@ async function pdf(path,name) {try{
 }catch(ex){console.log("pdf",ex)}}
 //XXX:MOVER_A_LIB }
 
+function ListItem({name,dsc,get_selected,set_selected,onClick}) {
+	return (<>
+		<ToggleButton onIcon="pi pi-cart-plus" offIcon="pi pi-minus" onLabel="" offLabel="" checked={get_selected(name)} onChange={(e) => set_selected(name,e.value)} size="small"/>	
+		<a onClick={onClick}>{dsc}</a>
+	</>)
+}
+
+
 //SEE: https://primereact.org/fileupload/#advanced
 export function Files({onFileEdit}) {
 	const [path, setPathImpl]= useState('');
 	const [files, setFiles]= useState({});
+	const [selected, setSelected]= useState([]);
 	const toast = useRef(null);
+
+	const get_selected= (name) => (selected.indexOf(name)>-1)
+	const set_selected= (name, wantsSelected) => {
+		if (wantsSelected) { if (! get_selected(name)) {
+			setSelected([...selected,name]);
+		}}else{if (get_selected(name)) {
+			setSelected(selected.filter(n => (n!=name)));
+		}}
+	}
 
 	const setPath= (p) => { setPathImpl(p.replace(/\/+/g,'/')); }
 
@@ -54,6 +73,11 @@ export function Files({onFileEdit}) {
 	}catch(ex){console.log("files_refresh",ex)}}
 
 	useEffect(() => { files_refresh(); }, [path])
+
+	const onDelete = async () => {
+		await Promise.all(selected.map( n => apic_rm_file(n) ));	
+		await files_refresh();
+	}
 
 	const onUpload = () => {
 		toast.current.show({ severity: 'info', summary: 'Success', detail: 'Files Uploaded' });
@@ -114,23 +138,28 @@ export function Files({onFileEdit}) {
 				name="media" 
 				chooseOptions={{ icon: 'pi pi-upload', iconOnly: true, label: 'upload' }}
 			/>
+			<Button icon="pi pi-trash" aria-label="zip" onClick={onDelete} />
 		</div>  
 		<div className="card flex">
 		<ul>
-			{ Object.keys(files).sort().map( (name,idx) => {
-				let d= files[name];
+			{ Object.keys(files).sort().map( (name,idx) => { let d= files[name];
 				let dsc= `${name || '.'} ${new Date(d.mtimeMs || d.ctimeMs).toLocaleString()} ` + (d.type!='dir' ? `${d.size ? d.size/1000 : '?'}kb` : '(dir)');
 				return (
-					<li key={idx}>{
-						d.type!='dir' ? (
-							name.match(/\.((txt)|(md)|(js)|(json)|(yaml)|(html)|(css))$/) 
-								? <a onClick={() => onFileEdit(path,name)}>{dsc}</a>
-								: name.match(/\.pdf$/) 
-								? <a onClick={() => onPDF(path,name)}>(PDF) {dsc}</a>
-								: <a onClick={() => onFileView(path,name)}>{dsc}</a>
-						)
-						: <a onClick={() => setPath(path+'/'+name)}>{dsc}</a>
-					}</li>)
+					<li key={idx}>
+						<ListItem name={name} dsc={dsc} set_selected={set_selected} get_selected={get_selected}
+							onClick={
+								d.type!='dir' 
+								? (
+									name.match(/\.((txt)|(md)|(js)|(json)|(yaml)|(html)|(css))$/) 
+										? (() => onFileEdit(path,name))
+										: name.match(/\.pdf$/) 
+										? (() => onPDF(path,name))
+										: (() => onFileView(path,name))
+								)
+								: (() => setPath(path+'/'+name))
+							}
+						/>
+					</li>)
 			}) }
 		</ul>
 		</div>

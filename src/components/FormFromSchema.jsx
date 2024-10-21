@@ -61,6 +61,7 @@ export function FormFromSchema() {
 	const schema= schemaFor('xxx')
 	return (
 		<div className="container">
+			<h1>FormFromSchema</h1>
 			<div className="row">
 				<div className="offset-md-2 col-md-8">
 					<ThemedForm

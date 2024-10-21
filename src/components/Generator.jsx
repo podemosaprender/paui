@@ -22,13 +22,15 @@ export function Generator() {
 
 	const on_generate= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
 		const tpl= await apic_get_file('xt.html');
-		const data= JSON.parse(await apic_get_file('xf.json'));
+		const json_src= await apic_get_file('xf.json')
+		console.log('on_generate src',json_src.slice(0,200));
+		const data= JSON.parse(json_src);
 
 		const zip= new_zip_model();
 		let i=0;
 		await Promise.all(Object.values( data.proyectos ).map( async (p) => {
 			let s= tpl_expand(tpl,p);
-			let r= await zip.addFile(new File([s],p.id+''));
+			let r= await zip.addFile(new File([s],p.id+''+'.html'));
 			if (i++ % 100==0) console.log(i);
 			return r;
 		}));

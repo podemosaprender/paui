@@ -107,6 +107,38 @@ const fsReadHandler = async ({url, noResponse}) => {
 	return noResponse ? r : new Response(r);
 };
 
+const fsRmHandler= async ({url, eventOrKV, noResponse}) => {
+  if (broadcastChannel) { broadcastChannel.postMessage('fsp saving'); }
+
+	let p= (url.pathname.match(/\/up\/(.*)/)||[])[1]||'' //A: remove prefix dir eg in gitpages
+
+	const formData = Array.isArray(eventOrKV.media) ? null : await event.request.formData();
+	const path= (formData ? formData.get('path') : eventOrKV.path ) || p || '';
+	const mediaFiles = (formData ? formData.getAll('media') : eventOrKV.media);
+	console.log("fsRmHandler",path);
+
+	const dst= '/up/'+path+'/';
+  for (const mediaFile of mediaFiles) {
+		console.log("MEDIA FILE", mediaFile.name);
+    if (!mediaFile.name) { // TODO: come up with a  default name for each possible MIME type.
+      if (broadcastChannel) { broadcastChannel.postMessage('Sorry! No name found on incoming media.'); }
+      continue;
+    }
+
+		try {
+			let fpath=dst+mediaFile.name;
+			await	fsp.unlink(fpath);
+			console.log("fsRmHandler fsp OK",fpath)
+		} catch (ex) { console.log("fsRmHandler fsp",dst, mediaFiles.name,fpath,ex) }
+  }
+
+  // Use the MIME type of the first file shared to determine where we redirect.
+	const routeToRedirectTo = null; //XXX: let app decide and inform user
+	const redirectionUrl = routeToRedirectTo ? `/#${routeToRedirectTo.href}` : '/'; //XXX:HC
+
+	return noResponse ? true : Response.redirect(redirectionUrl, 303); //A: After the POST succeeds, redirect to the main page.
+};
+
 const api_registerRoutes= (registerRoute) => {
 	registerRoute( new RegExp('/up(/.*)?'), fsReadHandler);
 	registerRoute( new RegExp('/up(/.*)?'), fsWriteHandler, 'POST');
@@ -119,6 +151,7 @@ ApiCmd_.key_sign= _sign; //XXX:SEC
 ApiCmd_.git_clone= clone;
 ApiCmd_.get_file= fsReadHandler
 ApiCmd_.set_file= fsWriteHandler
+ApiCmd_.rm_file= fsRmHandler
 
 const api_onmessage= async (event) => {
 	let {cmd,args,reqId}= event.data || {cmd:'UNKNOWN'};
@@ -195,6 +228,7 @@ const apic_set_file= async(fpath,content) => {
 	let p= fpath.split('/'), n= p.pop(), path= p.join('/');
 	return await apic_upload({[n]: content},path);
 }
+const apic_rm_file= async (fpath) => (await apic_call('rm_file', [{url:{pathname: ''}, eventOrKV: {media:[{name: fpath}]}, noResponse: true}]))
 
 const apic_get_file_impl_= async (fpath) => (
 	(await apic_call('get_file', [{url:{pathname: fpath}, noResponse: true}]))
@@ -212,6 +246,6 @@ export {
 	cacheName, channelName, urlPrefix,
 	
 	//CLIENT
-	apic_upload, apic_set_file, apic_get_file, apic_get_file_blob,
+	apic_upload, apic_set_file, apic_get_file, apic_get_file_blob, apic_rm_file,
 	apic_set_listener, apic_call,
 }

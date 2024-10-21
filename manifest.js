@@ -2,7 +2,7 @@
 //U: using 'application/*' doesn't do the trick but adding as many mimetypes and filetypes as you can seems to get the serviceworker to accept them if they are listed explicitly.
 
 import mimeDb from 'mime-db';
-import fileTypes from './src/svc/extensions.json' assert {type: 'json'} //FROM: https://github.com/dyne/file-extension-list/blob/master/pub/extensions.json
+import fileTypes from './src/svc/extensions.json' with {type: 'json'} //FROM: https://github.com/dyne/file-extension-list/blob/master/pub/extensions.json
 //DBG: console.log(fileTypes)
 
 //SEE: https://developer.chrome.com/docs/capabilities/web-apis/web-share-target#sample_applications

@@ -24,6 +24,7 @@
     "@zip.js/zip.js": "^2.7.47",
     "comlink": "^4.4.1",
     "isomorphic-git": "^1.25.10",
+    "js-yaml": "^4.1.0",
     "mime-db": "^1.52.0",
     "palette-generator": "^1.1.0",
     "pdfjs-dist": "^4.7.76",

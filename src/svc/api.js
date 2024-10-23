@@ -1,7 +1,7 @@
 //INFO: toda la API aqui para poder desarrollar SIN SW primero pero despues usarla desde ahi
 
-const cacheName= 'media';
 const channelName= 'messages';
+const cacheName= 'media';
 const urlPrefix= '/_media/';
 
 const broadcastChannel = 'BroadcastChannel' in self ? new BroadcastChannel(channelName) : null;
@@ -13,11 +13,15 @@ import { fsp, clone } from 'src/svc/git'
 
 self.xfsp= fsp;
 
-const ensure_dir= async (path) => {
+const ensure_dir= async (path, dirSeen= {}, length_delta=0) => { //U: mkdir -p ; length_delta=1 to stop before filename
 	let parts= path.split('/'); 
-	for (let i=1, cur=''; i<parts.length; i++) { cur+='/'+parts[i];
-		try { await fsp.mkdir(cur) } catch (ex) { console.log("fsp mkdir maybeOK",cur,path,ex) } ;
+	for (let i=1, cur=''; i<(parts.length - length_delta); i++) { cur+='/'+parts[i];
+		if (! dirSeen[cur]) {
+			try { await fsp.mkdir(cur) } catch (ex) { console.log("fsp mkdir maybeOK",cur,path,ex) } ;
+			dirSeen[cur]= 1;
+		}
 	}
+	return dirSeen;
 }
 
 const _key_for= async (id='k',t='.pub') => { //U: crear y guardar keypairs
@@ -47,34 +51,31 @@ const _sign= async (msg,id) => {
 }
 
 const fsWriteHandler= async ({url, eventOrKV, noResponse}) => {
-  if (broadcastChannel) { broadcastChannel.postMessage('fsp saving'); }
-
-	let p= (url.pathname.match(/\/up\/(.*)/)||[])[1]||'' //A: remove prefix dir eg in gitpages
+	let pfx= (url.pathname.match(/\/up\/(.*)/)||[])[1]||'' //A: remove prefix dir eg in gitpages //XXX:PFX
 
 	const formData = Array.isArray(eventOrKV.media) ? null : await event.request.formData();
-	const path= (formData ? formData.get('path') : eventOrKV.path ) || p || '';
 	const mediaFiles = (formData ? formData.getAll('media') : eventOrKV.media);
+	const path= (formData ? formData.get('path') : eventOrKV.path ) || pfx || ''; //XXX:PFX?
 	console.log("fsWriteHandler",path);
 
-	const dst= '/up/'+path+'/';
-	await ensure_dir(dst);	
+	const dirSeen= {}
+	let dst= '/up/'+path+'/'; //XXX:PFX
+	await ensure_dir(dst, dirSeen);	
 
   for (const mediaFile of mediaFiles) {
 		console.log("MEDIA FILE", mediaFile.name);
-    if (!mediaFile.name) { // TODO: come up with a  default name for each possible MIME type.
-      if (broadcastChannel) { broadcastChannel.postMessage('Sorry! No name found on incoming media.'); }
+    if (!mediaFile.name) { //TODO: come up with a  default name for each possible MIME type.
       continue;
     }
 
 		try {
-			let fpath=dst+mediaFile.name;
+			let fpath= dst + mediaFile.name;
+			await ensure_dir(fpath, dirSeen, 1); //A: mkdir for everything before filename
 			await	fsp.writeFile(fpath, mediaFile);
 			console.log("fsWriteHandler fsp OK",fpath)
-  		if (broadcastChannel) { broadcastChannel.postMessage('fsp saved '+fpath); }
 		} catch (ex) { console.log("fsWriteHandler fsp",dst, mediaFiles.name,fpath,ex) }
   }
 
-  // Use the MIME type of the first file shared to determine where we redirect.
 	const routeToRedirectTo = null; //XXX: let app decide and inform user
 	const redirectionUrl = routeToRedirectTo ? `/#${routeToRedirectTo.href}` : '/'; //XXX:HC
 
@@ -225,8 +226,7 @@ const apic_upload= async (name2bytes, path='') => {
 }
 
 const apic_set_file= async(fpath,content) => {
-	let p= fpath.split('/'), n= p.pop(), path= p.join('/');
-	return await apic_upload({[n]: content},path);
+	return await apic_upload({[fpath]: content},'/');
 }
 const apic_rm_file= async (fpath) => (await apic_call('rm_file', [{url:{pathname: ''}, eventOrKV: {media:[{name: fpath}]}, noResponse: true}]))
 

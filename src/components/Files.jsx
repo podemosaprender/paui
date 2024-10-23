@@ -156,7 +156,7 @@ export function Files({onFileEdit}) {
 							onClick={
 								d.type!='dir' 
 								? (
-									name.match(/\.((txt)|(md)|(js)|(json)|(yaml)|(html)|(css))$/) 
+									name.match(/\.((txt)|(md)|(js)|(json)|(yaml)|(tsv)|(html)|(css))$/) 
 										? (() => onFileEdit(path,name))
 										: name.match(/\.pdf$/) 
 										? (() => onPDF(path,name))

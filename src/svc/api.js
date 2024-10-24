@@ -56,24 +56,26 @@ const fsWriteHandler= async ({url, eventOrKV, noResponse}) => {
 	const formData = Array.isArray(eventOrKV.media) ? null : await event.request.formData();
 	const mediaFiles = (formData ? formData.getAll('media') : eventOrKV.media);
 	const path= (formData ? formData.get('path') : eventOrKV.path ) || pfx || ''; //XXX:PFX?
-	console.log("fsWriteHandler",path);
+	console.log("fsWriteHandler path",path,pfx,url);
 
 	const dirSeen= {}
 	let dst= '/up/'+path+'/'; //XXX:PFX
 	await ensure_dir(dst, dirSeen);	
 
   for (const mediaFile of mediaFiles) {
-		console.log("MEDIA FILE", mediaFile.name);
+		console.log("MEDIA FILE", mediaFile);
     if (!mediaFile.name) { //TODO: come up with a  default name for each possible MIME type.
       continue;
     }
 
+		let fpath= dst + mediaFile.name;
+		//DBG: console.log("fsWriteHandler fpath",fpath);
 		try {
-			let fpath= dst + mediaFile.name;
 			await ensure_dir(fpath, dirSeen, 1); //A: mkdir for everything before filename
+			//DBG: console.log("fsWriteHandler ensure_dir OK",fpath);
 			await	fsp.writeFile(fpath, mediaFile);
-			console.log("fsWriteHandler fsp OK",fpath)
-		} catch (ex) { console.log("fsWriteHandler fsp",dst, mediaFiles.name,fpath,ex) }
+			//DBG: console.log("fsWriteHandler fsp OK",fpath)
+		} catch (ex) { console.log("fsWriteHandler fsp ERROR",dst, mediaFiles.name,fpath,ex) }
   }
 
 	const routeToRedirectTo = null; //XXX: let app decide and inform user
@@ -221,7 +223,7 @@ const apic_upload= async (name2bytes, path='') => {
 		console.log("apic_upload",n,f);
 		fd.media.push( f );
 	})
-	let r= await apic_call('set_file',[{url:{pathname: path}, eventOrKV: fd, noResponse: true}]);
+	let r= await apic_call('set_file',[{url:{pathname: '/up/'+path}, eventOrKV: fd, noResponse: true}]);
 	return r;
 }
 

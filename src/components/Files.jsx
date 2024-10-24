@@ -95,9 +95,12 @@ export function Files({onFileEdit}) {
 	};
 
 	const uploadHandler = async (e) => {
+		console.log(e);
 		let name2file= {};
 		e.files.forEach( f => (name2file[f.name]=f) )
-		await apic_upload(name2file,'');
+		await apic_upload(name2file,path);
+		await e.options.clear();
+		onUpload();
 	};
 
 	const file_new = (e) => { onFileEdit(path);	}
@@ -132,6 +135,7 @@ export function Files({onFileEdit}) {
 			<Button icon="pi pi-plus" aria-label="new file" onClick={file_new} />
 			<Button icon="pi pi-window-minimize" aria-label="zip" onClick={zip_new} />
 			<FileUpload 
+				mode="basic"
 				customUpload={true}
 				uploadHandler={uploadHandler}
 				onBeforeUpload={onBeforeUpload}
@@ -139,9 +143,9 @@ export function Files({onFileEdit}) {
 				url="./_share-target" 
 				accept="*|*/*" 
 			  multiple  auto
-				mode="basic" 
 				name="media" 
 				chooseOptions={{ icon: 'pi pi-upload', iconOnly: true, label: 'upload' }}
+				emptyTemplate={<p className="m-0">Drag and drop files to here to upload.</p>}
 			/>
 			<Button icon="pi pi-check" aria-label="select all" onClick={onSelectAll} />
 			<Button icon="pi pi-trash" aria-label="delete" onClick={onDelete} />

@@ -12,6 +12,8 @@
 		let url= await zip.getBlobURL();
 		window.open(url);
 	}
+ 
+//SEE: https://github.com/gildas-lormeau/zip.js/blob/gh-pages/demos/demo-read-file.js
 */
 
 import * as zip from '@zip.js/zip.js';

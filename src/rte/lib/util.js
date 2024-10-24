@@ -63,6 +63,13 @@ export function set_p_all(dst,kv) { dst= dst || {}; //U: kv= path->v
 	return dst;
 }
 
+export function ser_p_kv(x,pfx,out_kv={},sep_kv='{',sep_l='[' ) {
+	if (Array.isArray(x)) { x.forEach( (e,i) => ser_p_kv(e,pfx+sep_l+i, out_kv,sep_kv,sep_l ) ) }
+	else if (typeof(x)=="object" && x!=null) { Object.entries(x).forEach( ([k,v]) => ser_p_kv(v,pfx+sep_kv+k, out_kv,sep_kv,sep_l) ) }
+	else { out_kv[pfx]= x }
+	return out_kv
+}
+
 //S: web *******************************************************
 export const encode_uri= (s) => encodeURIComponent(s).replace(/%20/g,'+');
 export const ser_urlparams= (v) => Object.entries(v).map( (kv) => kv.map(encode_uri).join('=') ).join('&');

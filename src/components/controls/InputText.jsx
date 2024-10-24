@@ -12,12 +12,15 @@ export function InputText({value,setValue,label,id,autocompleteOpts,autocomplete
 
 	const hasAutocomplete= autocompleteOpts || autocompleteFn;
 	const search = (event) => {
-		let _items = [...Array(10).keys()];
-		setItems(event.query ? [...Array(10).keys()].map(item => event.query + '-' + item) : _items);
+		let q= event.query?.toLowerCase() || '';
+		if (hasAutocomplete && q.length>0) {
+			let _items= (autocompleteFn 
+				? autocompleteFn(q, autocompleteOpts) 
+				: autocompleteOpts.filter(s => (s && (s+'').toLowerCase().indexOf(q)>-1)))
+			setItems(_items);
+		}
 	}
 	
-	//XXX:
-
 	return (
 		<div key={id} className="p-inputgroup flex-1" style={{marginTop: "2rem"}}>
 			<FloatLabel>

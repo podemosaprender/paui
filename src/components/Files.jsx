@@ -16,7 +16,7 @@ window.peeropen= open;
 window.peersend= send;
 //XXX:MOVER_A_APP }
 
-//
+
 //XXX:MOVER_A_LIB {
 //SEE: https://writingjavascript.com/how-to-extract-pdf-data-with-pdfjs
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';

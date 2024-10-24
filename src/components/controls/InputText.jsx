@@ -6,6 +6,7 @@ import { InputText as PrimeInputText } from "primereact/inputtext";
 import { AutoComplete } from "primereact/autocomplete";
 
 //SEE: https://primereact.org/autocomplete/#dropdown
+//SEE: https://primereact.org/autocomplete/#multiple (agregar "query (+)" como opcion en opciones)
 export function InputText({value,setValue,label,id,autocompleteOpts,autocompleteFn}) {
 	const inputRef= useRef(null)
 	const [items, setItems]= useState([]);
@@ -18,6 +19,8 @@ export function InputText({value,setValue,label,id,autocompleteOpts,autocomplete
 				? autocompleteFn(q, autocompleteOpts) 
 				: autocompleteOpts.filter(s => (s && (s+'').toLowerCase().indexOf(q)>-1)))
 			setItems(_items);
+		} else if (autocompleteOpts && q=='') {
+			setItems(autocompleteOpts);
 		}
 	}
 	

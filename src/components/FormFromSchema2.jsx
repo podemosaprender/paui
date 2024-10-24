@@ -18,17 +18,18 @@ const get_form_data= async () => {
 	}
 
 	let def= yaml.load( await apic_get_file('def_proyecto.yaml') );
+	Object.keys(def).forEach(k => (def[k]=(k.match(/(director)|(integrante)/) ? "persona" : "")));
 	Object.keys(def).forEach(k => (xdata[k]=""));
 
 	let opts= {};
-	opts.personas= await apic_get_file('personas.tsv')
+	opts.persona= await apic_get_file('personas.tsv')
 			.then(r => (
 				r.split(/[\r\n]+/)
 				.map(l => {let x= l.split(/\t/); return x[2]+', '+x[1]})
 			));
 
 	for (let k in def) {
-		let col= k.replace(/(_\w)?_id$/,'');
+		let col= def[k] || k.replace(/(_\w)?_id$/,'');
 		def[k]= col;
 		if (col!=k && !opts[col]) {
 			let src= await apic_get_file(col+'.tsv');

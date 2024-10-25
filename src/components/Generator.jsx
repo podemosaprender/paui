@@ -43,7 +43,18 @@ window.get_p= get_p;
 window.tpl_expand= tpl_expand;
 //XXX:MOVER_A_LIB }
 
-//SEE: https://primereact.org/fileupload/#advanced
+//XXX:MOVER_A_LIB {
+import { keys_zip, get_file_zip } from 'src/svc/zip';
+
+async function zip_expand() {
+	const zb= await apic_get_file_blob('xz.zip')
+	const ze= await keys_zip(zb)
+	await Promise.all(ze.filter(e => (!e.filename.endsWith('/'))).map( async e => {
+		apic_set_file('aa/'+e.filename, await get_file_zip(e))
+	}));
+}
+//XXX:MOVER_A_LIB {
+
 export function Generator() {
 	const [path, setPathImpl]= useState('');
 	const [files, setFiles]= useState({});
@@ -71,6 +82,7 @@ export function Generator() {
 		<div className="card flex" style={{ alignItems: "end"}}>
 			<Button icon="pi pi-arrow-left" aria-label="generate" onClick={on_generate} />
 			<Button icon="pi pi-arrow-down" aria-label="generate" onClick={get_tsv} />
+			<Button icon="pi pi-file-export" aria-label="generate" onClick={zip_expand} />
 		</div>  
 	</div>)
 }

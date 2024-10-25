@@ -1,3 +1,5 @@
+const DBG=0;
+
 import { useState, useEffect, useCallback } from 'react'
 
 import PWABadge from './PWABadge'

@@ -1,5 +1,7 @@
 //INFO: toda la API aqui para poder desarrollar SIN SW primero pero despues usarla desde ahi
 
+const DBG= 0;
+
 const channelName= 'messages';
 const cacheName= 'media';
 const urlPrefix= '/_media/';
@@ -11,13 +13,15 @@ broadcastChannel.postMessage('API starting')
 import { genKeypairSign, exportKey, importKey, sign } from 'src/svc/crypto';
 import { fsp, clone } from 'src/svc/git'
 
-self.xfsp= fsp;
+if (DBG>1) {
+	self.xfsp= fsp;
+}
 
 const ensure_dir= async (path, dirSeen= {}, length_delta=0) => { //U: mkdir -p ; length_delta=1 to stop before filename
 	let parts= path.split('/'); 
 	for (let i=1, cur=''; i<(parts.length - length_delta); i++) { cur+='/'+parts[i];
 		if (! dirSeen[cur]) {
-			try { await fsp.mkdir(cur) } catch (ex) { console.log("fsp mkdir maybeOK",cur,path,ex) } ;
+			try { await fsp.mkdir(cur) } catch (ex) { DBG>7 && console.log("fsp mkdir maybeOK",cur,path,ex) } ;
 			dirSeen[cur]= 1;
 		}
 	}
@@ -26,16 +30,16 @@ const ensure_dir= async (path, dirSeen= {}, length_delta=0) => { //U: mkdir -p ;
 
 const _key_for= async (id='k',t='.pub') => { //U: crear y guardar keypairs
 	let keypath=`/_SEC/${id}`;
-	let loadk; try { loadk= await fsp.readFile(keypath+t,'utf8'); }catch(ex){console.log("fsp read maybe OK",id,t,ex) }
+	let loadk; try { loadk= await fsp.readFile(keypath+t,'utf8'); }catch(ex){DBG>7 && console.log("fsp read maybe OK",id,t,ex) }
 	if (!loadk) {
-		let kp= await genKeypairSign(); console.log({kp});
-		let privk= await exportKey(kp.privateKey); console.log({privk});
-		let pubk= await exportKey(kp.publicKey); console.log({pubk})
-		try { await fsp.mkdir('/_SEC') }catch(ex){console.log("fsp mkdir _SEC maybe OK",ex)}
+		let kp= await genKeypairSign(); DBG>7 && console.log({kp});
+		let privk= await exportKey(kp.privateKey); DBG>7 && console.log({privk});
+		let pubk= await exportKey(kp.publicKey); DBG>7 && console.log({pubk})
+		try { await fsp.mkdir('/_SEC') }catch(ex){DBG>7 && console.log("fsp mkdir _SEC maybe OK",ex)}
 		await fsp.writeFile(keypath+'.pub', pubk);
 		await fsp.writeFile(keypath, privk);
 		loadk= t!='' ? pubk : privk;
-		console.log("KEYS CREATED AND WWITTEN", keypath);
+		console.log("KEYS CREATED AND WRITTEN", keypath);
 	} else { console.log("KEYS LOADED", keypath); }
 	return loadk;
 }
@@ -56,14 +60,14 @@ const fsWriteHandler= async ({url, eventOrKV, noResponse}) => {
 	const formData = Array.isArray(eventOrKV.media) ? null : await event.request.formData();
 	const mediaFiles = (formData ? formData.getAll('media') : eventOrKV.media);
 	const path= (formData ? formData.get('path') : eventOrKV.path ) || pfx || ''; //XXX:PFX?
-	console.log("fsWriteHandler path",path,pfx,url);
+	DBG>7 && console.log("fsWriteHandler path",path,pfx,url);
 
 	const dirSeen= {}
 	let dst= '/up/'+path+'/'; //XXX:PFX
 	await ensure_dir(dst, dirSeen);	
 
   for (const mediaFile of mediaFiles) {
-		console.log("MEDIA FILE", mediaFile);
+		DBG>7 && console.log("MEDIA FILE", mediaFile);
     if (!mediaFile.name) { //TODO: come up with a  default name for each possible MIME type.
       continue;
     }
@@ -89,9 +93,9 @@ const fsReadHandler = async ({url, noResponse}) => {
 	let p= (url.pathname.match(/\/up.*/)||['/up/'+url.pathname])[0] //A: ensure prefix dir
 	try {
 		let stat= await fsp.stat(p);
-		console.log("fsReadHandler STAT",p,stat);
+		DBG>7 && console.log("fsReadHandler STAT",p,stat);
 		if (stat.isDirectory()) {
-			console.log("fsReadHandler isDir",p,stat);
+			DBG>7 && console.log("fsReadHandler isDir",p,stat);
 			let rdir= ['EMPTY']; //DFTL
 			try {
 				let names= await fsp.readdir(p);
@@ -118,11 +122,11 @@ const fsRmHandler= async ({url, eventOrKV, noResponse}) => {
 	const formData = Array.isArray(eventOrKV.media) ? null : await event.request.formData();
 	const path= (formData ? formData.get('path') : eventOrKV.path ) || p || '';
 	const mediaFiles = (formData ? formData.getAll('media') : eventOrKV.media);
-	console.log("fsRmHandler",path);
+	DBG>7 && console.log("fsRmHandler",path);
 
 	const dst= '/up/'+path+'/';
   for (const mediaFile of mediaFiles) {
-		console.log("MEDIA FILE", mediaFile.name);
+		DBG>7 && console.log("MEDIA FILE", mediaFile.name);
     if (!mediaFile.name) { // TODO: come up with a  default name for each possible MIME type.
       if (broadcastChannel) { broadcastChannel.postMessage('Sorry! No name found on incoming media.'); }
       continue;
@@ -131,7 +135,7 @@ const fsRmHandler= async ({url, eventOrKV, noResponse}) => {
 		try {
 			let fpath=dst+mediaFile.name;
 			await	fsp.unlink(fpath);
-			console.log("fsRmHandler fsp OK",fpath)
+			DBG>7 && console.log("fsRmHandler fsp OK",fpath)
 		} catch (ex) { console.log("fsRmHandler fsp",dst, mediaFiles.name,fpath,ex) }
   }
 
@@ -166,7 +170,7 @@ const api_onmessage= async (event) => {
 			if (r instanceof Promise) { r= await r; }
 		}
 	} catch (ex) { r= 'ERROR!!! '+ex; console.error("api_onmessage",ex);}
-	console.log("MSG R", r, event.source!=null, Object.keys(ApiCmd_), event);
+	DBG>7 && console.log("MSG R", r, event.source!=null, Object.keys(ApiCmd_), event);
 	return { kp: [cmd, ...args], v: r, reqId }
 }
 //S: API } **************************************************
@@ -179,7 +183,7 @@ const apic_worker= () => { //A: return serviceWorker if available, init regular 
 	} else {
 		if (! Worker_) {
 			Worker_= new Worker(new URL('./sw-nonpwa.js', import.meta.url), { type: 'module', })
-			window.xwk= Worker_;
+			self.xwk= Worker_;
 		}
 		return Worker_;
 	}
@@ -187,7 +191,7 @@ const apic_worker= () => { //A: return serviceWorker if available, init regular 
 
 
 const listeners_= {};
-const swOnMessage_= (m) => { console.log("API swOnMessage_",m);
+const swOnMessage_= (m) => { DBG>7 && console.log("API swOnMessage_",m);
 	Object.values(listeners_).forEach( cb => { try{ cb(m) }catch(ex){}} )
 }
 const apic_set_listener= (k,cb) => { 
@@ -220,7 +224,7 @@ const apic_upload= async (name2bytes, path='') => {
 	let fd= {media:[]}
 	Object.entries(name2bytes).forEach( ([n,s]) => {
 		let f= s instanceof File ? s : new File([s],n)
-		console.log("apic_upload",n,f);
+		DBG>7 && console.log("apic_upload",n,f);
 		fd.media.push( f );
 	})
 	let r= await apic_call('set_file',[{url:{pathname: '/up/'+path}, eventOrKV: fd, noResponse: true}]);

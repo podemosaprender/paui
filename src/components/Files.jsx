@@ -1,3 +1,5 @@
+const DBG= 0;
+
 import React, { useRef, useState, useEffect } from 'react';
 
 import { Button } from 'primereact/button';
@@ -9,6 +11,8 @@ import { ToggleButton } from 'primereact/togglebutton'
 
 import { apic_get_file, apic_get_file_blob, apic_upload, apic_rm_file } from 'src/svc/api';
 import { new_zip_model } from 'src/svc/zip';
+
+window.apic_get_file_blob= apic_get_file_blob;
 
 //XXX:MOVER_A_APP {
 import { open, send } from 'src/svc/net_peerjs';
@@ -73,7 +77,7 @@ export function Files({onFileEdit}) {
 
 	const files_refresh= async () => {try{
 		let l= await apic_get_file('./up/'+path);
-		console.log("files_refresh",l)
+		DBG>7 && console.log("files_refresh",l);
 		setFiles(JSON.parse(l));
 	}catch(ex){console.log("files_refresh",ex)}}
 

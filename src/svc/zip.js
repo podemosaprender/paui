@@ -18,7 +18,7 @@ const DBG= 9;
 */
 
 import * as zip from '@zip.js/zip.js';
-export const new_zip_model = (() => {
+export const new_zip_model = () => {
 	let zipWriter;
 	return {
 		addFile(file, options) {
@@ -33,14 +33,21 @@ export const new_zip_model = (() => {
 				zipWriter = null;
 				return blobURL;
 			} else { throw new Error("Zip file closed"); }
+		},
+		async getBlob() {
+			if (zipWriter) {
+				const blob= await zipWriter.close();
+				zipWriter = null;
+				return blob;
+			} else { throw new Error("Zip file closed"); }
 		}
-	};
-})
+	}
+}
 
 /* TEST {
 async function xgz(fcnt,ecnt) { xz= new_zip_model(); for (i=0;i<fcnt;i++) { if (i%1000==0) { console.log(i); } let a= []; for (j=0;j<ecnt;j++) {a.push("F"+i+":"+Math.random())}; await xz.addFile(new File([JSON.stringify(a)],"file"+i)) } }
 async function xgzt ()  { await xgz(1000,3000); window.open(await xz.getBlobURL()) }
- */// TEST }
+*/// TEST }
 
 //SEE: https://github.com/gildas-lormeau/zip.js/blob/gh-pages/demos/demo-read-file.js
 export function keys_zip(file, options) {

@@ -8,12 +8,8 @@ import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 
 import { Editor } from 'src/components/Editor'
-import { QRImg } from 'src/components/QRImg';
-import { QRScan } from 'src/components/QRScan';
 import { Files } from 'src/components/Files';
 import { FormFromSchema } from 'src/components/FormFromSchema2';
-import { EditorPalette } from 'src/components/EditorPalette';
-import { Gastos } from 'src/components/Gastos';
 import { Generator } from 'src/components/Generator';
 
 import { ensure_kv } from 'src/svc/util';
@@ -54,7 +50,7 @@ export default function Menu({options, value, setValue}) {
 export function App() {
 	const [menu,setMenu]= useState({});
 
-	const [view,setView]= useState('');
+	const [view,setView]= useState('generator');
 	const [pk,setPk]= useState('')
 
 	const [txt,setTxt]= useState('')
@@ -83,18 +79,14 @@ export function App() {
 						menuViewData.t=='editor' ?  <Editor value={menuViewData.txt} onChange={menuViewData.onChange} /> :
 						<h3>Todo { menuViewData.t }</h3>
 					) :
-					view=='key' ?  <QRImg txt={(pk|| 'wait').substr(0,1000)} /> :
-					view=='qrscan' ? <QRScan /> :
 					view=='editor' ? <Editor value={txt} onChange={onChange}/> :
 					view=='form' ? <FormFromSchema /> :
-					view=='palette' ?	<EditorPalette /> : 
-					view=='gastos' ?	<Gastos /> : 
 					view=='files' ? <Files onFileEdit={onFileEdit} /> :
 					view=='generator' ? <Generator /> :
 					<h3>Unknown view {view}</h3>
 				}
 			</div>
-			<Menu options={['files','key','qrscan','editor','form','palette', 'gastos', 'generator', ...Object.keys(menu)]} setValue={setView} value={view} />
+			<Menu options={['files','editor','form','generator', ...Object.keys(menu)]} setValue={setView} value={view} />
 			<PWABadge/>
 		</div>
 	)

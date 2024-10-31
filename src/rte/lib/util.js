@@ -105,5 +105,13 @@ export const mfetch= async (data, url, method) => {
 	}
 }
 
+export function blob_download(blobOrString,name) {
+	const blob= typeof(blobOrString)=="string" ? new Blob([blobOrString]) : blobOrString;
+	const link= document.createElement('a');
+	link.download = name || 'download.dat';
+	link.href = URL.createObjectURL(blob);
+	link.click();
+	URL.revokeObjectURL(link.href);
+}
 
 

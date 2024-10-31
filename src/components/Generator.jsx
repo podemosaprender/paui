@@ -3,6 +3,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { apic_get_file, apic_set_file, apic_upload, apic_get_file_blob } from 'src/svc/api';
 import { new_zip_model } from 'src/svc/zip';
+import { blob_download } from 'src/rte/lib/util';
+
+
+const PFX='/aa/xyaml';
 
 //XXX:LIB { U: planilla google
 const url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQdbTUxtm4iXZOwlIag0cvmXZyWil8rcf4tqGDLtW59N2TxyjqrR5jZZbNkQ2tkVA/pub?gid=1259830238&single=true&output=tsv'
@@ -17,27 +21,63 @@ const get_tsv= async () => {
 import yaml from 'js-yaml';
 window.yaml= yaml;
 window.apic_get_file= apic_get_file;
-window.xnorm= async () => {
-	let ff= JSON.parse(await apic_get_file(''))
-	let r= {};
-	await Promise.all(
-		Object.keys(ff)
-			.filter(fname => fname.endsWith('.yaml'))
-			.map(async (fname) => (r[fname]= yaml.load(await apic_get_file(fname))))
-	);
-	return r;
-}
 
 import { ser_p_kv } from 'src/rte/lib/util';
 window.ser_p_kv= ser_p_kv;
+
+async function yaml_dir_to_kv(path='', onFile) {
+	let ff= JSON.parse(await apic_get_file(path))
+	await Promise.all(
+		Object.keys(ff)
+			.filter(fname => fname.endsWith('.yaml'))
+			.map(async (fname) => await onFile( fname, yaml.load(await apic_get_file(path+'/'+fname))) )
+	);
+}
+
+async function on_generate_tsv() {
+	let s='';
+	let hdr= null;
+	await yaml_dir_to_kv(PFX+'/pj', async (fname, kv) => {
+		const flat= ser_p_kv(kv,'');
+		if(!hdr) { hdr= Object.keys(flat); s+='fname\t'+hdr.join('\t')+'\n'; }
+		s+= fname+'\t'+ hdr.map(k => ((flat[k]||'')+'').replace(/\r?\n/g,'\\n')).join('\t')+'\n';
+	});
+	//DBG: console.log("SEE xout"); window.xout= s;
+	blob_download(s,'xpj1.tsv');
+}
+
+const on_generate_html= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
+	const tpl_src= await apic_get_file(PFX+'/tpl/tpl_proj.html');
+	const tpl_lol= parseJinjaLike(tpl_src)
+	console.log("TPL_LOL",tpl_lol);
+	const zip= new_zip_model();
+	let i=0;
+	await yaml_dir_to_kv(PFX+'/pj', async (fname,p) => {
+		let s= tpl_expand(tpl_lol.all[2],p);
+		let r= await zip.addFile(new File([s],p.id+''+'.html'));
+		if (i++ % 100==0) console.log(i);
+		return r;
+	});
+	blob_download(await zip.getBlob(),'xhtml_proj.zip');
+};
+
 //YAML }
 
-
 //XXX:MOVER_A_LIB {
+import { parseJinjaLike } from 'src/svc/tplJinjaLike';
+
 import { get_p } from 'src/rte/lib/util.js';
-const tpl_expand= (tpl, kv) => {
-	return tpl.replace(/\{\{\s*pj(\.[^}\s]+)\s*\}\}/gs, (_,ks) => get_p(kv,ks,false,/(\.)/));
+const tpl_expand1= (tpl, kv) => {
+	return tpl.replace(/\{\{\s*pj(\.[^}\s]+)\s*\}\}/gs, (_,ks) => (get_p(kv,ks,false,/(\.)/) || ('XXX_MISSING_'+ks)));
 }
+
+const tpl_expand= (tpl, kv) => {
+	return tpl.map(cmd => (
+		Array.isArray(cmd) ? 'XXX:TODO:'+cmd
+		: tpl_expand1(cmd, kv)
+	)).join('');
+}
+
 
 window.get_p= get_p;
 window.tpl_expand= tpl_expand;
@@ -60,29 +100,13 @@ export function Generator() {
 	const [files, setFiles]= useState({});
 	const toast = useRef(null);
 
-	const on_generate= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
-		const tpl= await apic_get_file('xt.html');
-		const json_src= await apic_get_file('xf.json')
-		console.log('on_generate src',json_src.slice(0,200));
-		const data= JSON.parse(json_src);
-
-		const zip= new_zip_model();
-		let i=0;
-		await Promise.all(Object.values( data.proyectos ).map( async (p) => {
-			let s= tpl_expand(tpl,p);
-			let r= await zip.addFile(new File([s],p.id+''+'.html'));
-			if (i++ % 100==0) console.log(i);
-			return r;
-		}));
-		let url= await zip.getBlobURL();
-		window.open(url);
-	};
 
 	return (<div>
-		<div className="card flex" style={{ alignItems: "end"}}>
-			<Button icon="pi pi-arrow-left" aria-label="generate" onClick={on_generate} />
-			<Button icon="pi pi-arrow-down" aria-label="generate" onClick={get_tsv} />
-			<Button icon="pi pi-file-export" aria-label="generate" onClick={zip_expand} />
-		</div>  
+		<ul>
+			<li><Button icon="pi pi-file-export" onClick={zip_expand} />Zip expand xz.zip</li>
+			<li><Button icon="pi pi-arrow-down" onClick={get_tsv} />Download Google TSV</li>
+			<li><Button icon="pi pi-arrow-left" onClick={on_generate_html} />Generate HTML</li>
+			<li><Button icon="pi pi-arrow-left" onClick={on_generate_tsv} />Generate TSV</li>
+		</ul>
 	</div>)
 }

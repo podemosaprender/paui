@@ -53,10 +53,12 @@ const on_generate_html= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza p
 	const zip= new_zip_model();
 	let i=0;
 	await yaml_dir_to_kv(PFX+'/pj', async (fname,p) => {
-		let s= tpl_expand(tpl_lol.all[2],p);
-		let r= await zip.addFile(new File([s],p.id+''+'.html'));
-		if (i++ % 100==0) console.log(i);
-		return r;
+		if (true || p.id=="1716") { //XXX:DBG
+			let s= tpl_expand(tpl_lol.all[2],{pj: p});
+			let r= await zip.addFile(new File([s],p.id+''+'.html'));
+			if (i++ % 100==0) console.log(i);
+			return r;
+		}
 	});
 	blob_download(await zip.getBlob(),'xhtml_proj.zip');
 };
@@ -68,14 +70,47 @@ import { parseJinjaLike } from 'src/svc/tplJinjaLike';
 
 import { get_p } from 'src/rte/lib/util.js';
 const tpl_expand1= (tpl, kv) => {
-	return tpl.replace(/\{\{\s*pj(\.[^}\s]+)\s*\}\}/gs, (_,ks) => (get_p(kv,ks,false,/(\.)/) || ('XXX_MISSING_'+ks)));
+	return tpl.replace(/\{\{\s*(.+?)\s*\}\}/gs, (_,ks) => {
+		let ksl= ks.trim().trim().split(/\s+or\s+/);
+		let r;
+		ksl.every( kOrConst => {
+			r= kOrConst.startsWith('"') ? kOrConst : get_p(kv,'.'+kOrConst,false,/(\.)/);
+			return r==null;
+		});
+		return (r || ('XXX_MISSING_'+JSON.stringify(ksl)));
+	});
 }
 
 const tpl_expand= (tpl, kv) => {
-	return tpl.map(cmd => (
-		Array.isArray(cmd) ? 'XXX:TODO:'+cmd
-		: tpl_expand1(cmd, kv)
-	)).join('');
+	const DBG=1;
+	return tpl.map(cmd => {
+		if (Array.isArray(cmd)) { let h= cmd[0];
+			if (h=='for') { let [_,colk,names,body]= cmd;
+				let col= get_p(kv,'.'+colk,false,/(\.)/);
+				DBG && console.log("tpl_expand for",{colk,names},col);
+				return ((DBG && `\n\n<!-- ${JSON.stringify(cmd,0,2)} -->\n\n`)||'')+ ( 
+					(!col) ? '' :
+					( Array.isArray(col) ? col.map( e => { 
+							let kv2={}; kv2[names[0]]= e; 
+							return (((DBG && `\n\n<!-- ${JSON.stringify(kv2,0,2)} -->\n\n`)||'')+
+								 tpl_expand(body, {...kv, ...kv2})
+							)
+						}) :
+						Object.entries(col).map( ([k,v]) => { 
+								let kv2={}; kv2[names[0]]= k;  kv2[names[1]]= v;  
+								return (((DBG && `\n\n<!-- ${JSON.stringify(kv2,0,2)} -->\n\n`)||'')+
+									tpl_expand(body, {...kv, ...kv2})
+								)
+							})
+					).join('')
+				);
+			} else {
+				return `\n\n<!-- TODO:tpl_expand ${JSON.stringify(cmd,0,2)} -->\n\n`
+			}
+		} else {
+			return tpl_expand1(cmd, kv)
+		}
+	}).join('');
 }
 
 

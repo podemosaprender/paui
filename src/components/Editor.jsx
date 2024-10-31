@@ -6,6 +6,7 @@ import { useCodeMirror } from '@uiw/react-codemirror';
 import { EditorView } from "@codemirror/view";
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { javascript } from '@codemirror/lang-javascript';
+import { yaml } from '@codemirror/lang-yaml';
 import { languages } from '@codemirror/language-data';
 
 import { Vim, vim, getCM } from "@replit/codemirror-vim"
@@ -25,6 +26,7 @@ export function Editor({fp, value, onChange, onClose}) {
 		extensions: [
 			vim(),
 			markdown({ base: markdownLanguage, codeLanguages: languages }),
+			yaml(),
 			EditorView.lineWrapping,
 		],
 		theme: "dark",

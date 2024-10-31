@@ -3,26 +3,20 @@ const DBG=0;
 import React, { useState, useEffect, useRef } from "react";
 
 import { InputText } from './controls/InputText';
+import { Button } from 'primereact/button';
+
 import { apic_get_file } from 'src/svc/api';
 
 //XXX:LIB {
 import yaml from 'js-yaml';
-const get_form_data= async () => {
+const get_form_data= async (fp,defp) => {
 	const pfx= '/aa/xyaml';
-	let xdata= {
-		autor1: 'pepe',
-		autor2: 'ana',
-		v_highlighted: true,
-		v_price: 59,
-		v_currency: 'ARS',
-		v_unit: 'mes',
-		v_features: ['la que va','mejor'],
-		v_action_link: 'o.v_action_link',
-	}
+	let def= yaml.load( await apic_get_file(defp) );
+	Object.keys(def).forEach(k => (def[k]=(k.match(/(director)|(integrante)|(autor)/) ? "persona" : "")));
 
-	let def= yaml.load( await apic_get_file(pfx+'/def/def_proyecto.yaml') );
-	Object.keys(def).forEach(k => (def[k]=(k.match(/(director)|(integrante)/) ? "persona" : "")));
-	Object.keys(def).forEach(k => (xdata[k]=""));
+	let xdata= yaml.load( await apic_get_file(fp) );
+	Object.keys(def).forEach(k => (xdata[k]||='',xdata[k]=typeof(xdata[k])=='object' ? JSON.stringify(xdata[k]) : xdata[k]));
+	Object.keys(xdata).forEach(k => ((xdata[k]||=''),xdata[k]=typeof(xdata[k])=='object' ? JSON.stringify(xdata[k]) : xdata[k]));
 
 	let opts= {};
 	opts.persona= await apic_get_file(pfx+'/data'+'/personas.tsv')
@@ -45,17 +39,18 @@ const get_form_data= async () => {
 DBG>0 && (window.get_form_data= get_form_data);
 //XXX:LIB }
 
-export function FormFromSchema() {
+export function FormFromSchema({fp,defp, onClose}) {
 	const [data,setData]= useState(null)
 	const [meta,setMeta]= useState(null)
 	useEffect(() => {
-		get_form_data().then( dataAndMeta => {
+		get_form_data(fp,defp).then( dataAndMeta => {
 			setMeta( dataAndMeta );
 			setData( dataAndMeta.xdata );
 		});
 	},[]);
 
 	return (<div>
+		<div>
 		{ data 
 			? (Object.entries(data).map( ([k,v]) => (
 			<InputText 
@@ -64,5 +59,9 @@ export function FormFromSchema() {
 			/>)))
 			: 'Loading...'
 		}
+		</div>
+		<div>
+			<Button label="Close" onClick={onClose} />
+		</div>
 	</div>)
 }

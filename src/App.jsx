@@ -71,9 +71,16 @@ export function App() {
 
 	const onFileEdit= async (path,fname) => {
 		let fp= path+'/'+(fname||'new.txt')
-		let s; try {s = await apic_get_file(fp)}catch(ex){}
-		let w= async (txt) => (await apic_set_file(fp,txt));
-		setMenu({...menu, [fp]: {t: 'editor',fp,txt: s||'', onChange: w, onClose: () => onMenuClose(fp) }})
+		let menuEntry;
+		if (fp.match(/yaml/)) { 
+			let defp='/aa/xyaml/def/def_'+(fp.includes('/pj/') ? 'proyecto' : 'publicacion')+'.yaml';
+			menuEntry= {t: 'form',fp, defp, onClose: () => onMenuClose(fp) }
+		} else {
+			let s; try {s = await apic_get_file(fp)}catch(ex){}
+			let w= async (txt) => (await apic_set_file(fp,txt));
+			menuEntry= {t: 'editor',fp,txt: s||'', onChange: w, onClose: () => onMenuClose(fp) }
+		}
+		setMenu({...menu, [fp]: menuEntry })
 		setView(fp);
 	}
 
@@ -84,6 +91,7 @@ export function App() {
 				{ 
 					menuViewData ? (
 						menuViewData.t=='editor' ?  <Editor fp={menuViewData.fp} value={menuViewData.txt} onChange={menuViewData.onChange} onClose={menuViewData.onClose} /> :
+						menuViewData.t=='form' ?  <FormFromSchema fp={menuViewData.fp} defp={menuViewData.defp} onClose={menuViewData.onClose} /> :
 						<h3>Todo { menuViewData.t }</h3>
 					) :
 					view=='editor' ? <Editor value={txt} /> :

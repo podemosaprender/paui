@@ -10,9 +10,9 @@ import { languages } from '@codemirror/language-data';
 
 import { Vim, vim, getCM } from "@replit/codemirror-vim"
 
-export function Editor({value, onChange}) {
+export function Editor({fp, value, onChange, onClose}) {
 	const onChangeImpl = useCallback((val, viewUpdate) => {
-		onChange(val);
+		onChange && onChange(val);
 	}, [onChange]);
 
 	const editor = useRef();
@@ -49,6 +49,7 @@ export function Editor({value, onChange}) {
 			Vim.handleKey(getCM(view),'<Esc>')
 			view.focus();
 		}} />
+		<Button label="CLOSE" onClick={() => onClose(fp)} />
 		<div ref={editor} />
 	</div>);
 }

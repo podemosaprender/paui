@@ -63,11 +63,18 @@ export function App() {
 		}
 	},[view]);
 
+	const onMenuClose= async (menuKey) => {
+		delete menu[menuKey];
+		setMenu(menu);
+		setView('generator');
+	}
+
 	const onFileEdit= async (path,fname) => {
 		let fp= path+'/'+(fname||'new.txt')
 		let s; try {s = await apic_get_file(fp)}catch(ex){}
 		let w= async (txt) => (await apic_set_file(fp,txt));
-		setMenu({...menu, [fp]: {t: 'editor',txt: s||'', onChange: w }})
+		setMenu({...menu, [fp]: {t: 'editor',fp,txt: s||'', onChange: w, onClose: () => onMenuClose(fp) }})
+		setView(fp);
 	}
 
 	let menuViewData= menu[view];
@@ -76,17 +83,17 @@ export function App() {
 			<div style={{ height: '90vh', overflowY: 'scroll'}}>
 				{ 
 					menuViewData ? (
-						menuViewData.t=='editor' ?  <Editor value={menuViewData.txt} onChange={menuViewData.onChange} /> :
+						menuViewData.t=='editor' ?  <Editor fp={menuViewData.fp} value={menuViewData.txt} onChange={menuViewData.onChange} onClose={menuViewData.onClose} /> :
 						<h3>Todo { menuViewData.t }</h3>
 					) :
-					view=='editor' ? <Editor value={txt} onChange={onChange}/> :
+					view=='editor' ? <Editor value={txt} /> :
 					view=='form' ? <FormFromSchema /> :
 					view=='files' ? <Files onFileEdit={onFileEdit} /> :
 					view=='generator' ? <Generator /> :
 					<h3>Unknown view {view}</h3>
 				}
 			</div>
-			<Menu options={['files','editor','form','generator', ...Object.keys(menu)]} setValue={setView} value={view} />
+			<Menu options={['generator','files','form','editor', ...Object.keys(menu)]} setValue={setView} value={view} />
 			<PWABadge/>
 		</div>
 	)

@@ -13,6 +13,9 @@ const get_form_data= async (fp,defp) => {
 	const pfx= '/aa/xyaml';
 	let def= yaml.load( await apic_get_file(defp) );
 	Object.keys(def).forEach(k => (def[k]=(k.match(/(director)|(integrante)|(autor)/) ? "persona" : "")));
+	Object.keys(def).forEach(k => (def[k]=(k.match(/(integrantes)|(autores)/) ? "persona*" : def[k])));
+	console.log("get_form_data def patched",def);
+	window.xdef= def;
 
 	let xdata= yaml.load( await apic_get_file(fp) );
 	Object.keys(def).forEach(k => (xdata[k]||='',xdata[k]=typeof(xdata[k])=='object' ? JSON.stringify(xdata[k]) : xdata[k]));
@@ -26,8 +29,8 @@ const get_form_data= async (fp,defp) => {
 			));
 
 	for (let k in def) {
-		let col= def[k] || k.replace(/(_\w)?_id$/,'');
-		def[k]= col;
+		let col= (def[k] || k.replace(/(_\w)?_id$/,'')).replace(/\*/g,'');
+		def[k] ||= col;
 		if (col!=k && !opts[col]) {
 			let src= await apic_get_file(pfx+'/data/'+col+'.tsv');
 			opts[col]= src.split(/[\r\n]+/);
@@ -46,16 +49,20 @@ export function FormFromSchema({fp,defp, onClose}) {
 		get_form_data(fp,defp).then( dataAndMeta => {
 			setMeta( dataAndMeta );
 			setData( dataAndMeta.xdata );
+			console.log("FormFromSchema meta",dataAndMeta.def );
 		});
-	},[]);
+	},[defp]);
 
 	return (<div>
 		<div>
 		{ data 
 			? (Object.entries(data).map( ([k,v]) => (
 			<InputText 
-				key={k} label={k} value={v} setValue={ v => setData({...data,[k]:v}) } 
-				autocompleteOpts={meta?.def[k] ? meta.opts[ meta.def[k] ]: null}
+				key={k} label={k} 
+				value={meta?.def[k]?.endsWith('*') && !Array.isArray(v) ? [v] : v} 
+				setValue={ v => setData({...data,[k]:v}) } 
+				autocompleteOpts={meta?.def[k] ? meta.opts[ meta.def[k].replace('*','') ]: null}
+				multiple={meta?.def[k]?.endsWith('*')}
 			/>)))
 			: 'Loading...'
 		}

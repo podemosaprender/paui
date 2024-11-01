@@ -178,7 +178,7 @@ const api_onmessage= async (event) => {
 //S: CLIENT { ************************************************
 var Worker_;
 const apic_worker= () => { //A: return serviceWorker if available, init regular worker if not
-	if (navigator.serviceWorker.controller) {
+	if (false && navigator.serviceWorker.controller) { //XXX:ANDROID FAILS?
 		return navigator.serviceWorker.controller;
 	} else {
 		if (! Worker_) {

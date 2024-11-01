@@ -9,12 +9,26 @@ import { blob_download } from 'src/rte/lib/util';
 const PFX='/aa/xyaml';
 
 //XXX:LIB { U: planilla google
+const get_http= async (url,fp) => {
+	let urlPx= 'https://api.cors.lol/' + url.replace(/^https?:\/\//,''); //encodeURIComponent(url);
+	let x= await fetch(urlPx).then(r => r.blob())
+	apic_set_file(fp,x);
+	alert("saved "+fp);
+}
+
 const url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQdbTUxtm4iXZOwlIag0cvmXZyWil8rcf4tqGDLtW59N2TxyjqrR5jZZbNkQ2tkVA/pub?gid=1259830238&single=true&output=tsv'
 const get_tsv= async () => {
 	let x= await fetch(url).then(r => r.text())
 	apic_set_file('prod.tsv',x);
 	alert("saved prod.tsv");
 }
+
+const zip_url='https://drive.usercontent.google.com/download?id=1Oes5jM4mlNUdsMI2Amz6-aXkpPYdCJXW&export=download&authuser=0' //FROM browser 'https://drive.google.com/file/d/1Oes5jM4mlNUdsMI2Amz6-aXkpPYdCJXW/view?usp=sharing'
+
+const get_zip= async () => {
+	await get_http(zip_url,'xz1.zip')
+}
+
 //XXX:LIB }
 
 //YAML {
@@ -140,6 +154,7 @@ export function Generator() {
 		<ul>
 			<li><Button icon="pi pi-file-export" onClick={zip_expand} />Zip expand xz.zip</li>
 			<li><Button icon="pi pi-arrow-down" onClick={get_tsv} />Download Google TSV</li>
+			<li><Button icon="pi pi-arrow-down" onClick={get_zip} />Download Google ZIP</li>
 			<li><Button icon="pi pi-arrow-left" onClick={on_generate_html} />Generate HTML</li>
 			<li><Button icon="pi pi-arrow-left" onClick={on_generate_tsv} />Generate TSV</li>
 		</ul>

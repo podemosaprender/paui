@@ -3,6 +3,8 @@ const DBG=0;
 import React, { useState, useEffect, useRef } from "react";
 
 import { InputText } from './controls/InputText';
+import { SelectButton } from 'primereact/selectbutton';
+import { FloatLabel } from "primereact/floatlabel";
 import { Button } from 'primereact/button';
 
 import { apic_get_file } from 'src/svc/api';
@@ -12,8 +14,8 @@ import yaml from 'js-yaml';
 const get_form_data= async (fp,defp) => {
 	const pfx= '/aa/xyaml';
 	let def= yaml.load( await apic_get_file(defp) );
-	Object.keys(def).forEach(k => (def[k]=(k.match(/(director)|(integrante)|(autor)/) ? "persona" : "")));
-	Object.keys(def).forEach(k => (def[k]=(k.match(/(integrantes)|(autores)/) ? "persona*" : def[k])));
+	Object.keys(def).forEach(k => (def[k] ||=(k.match(/(director)|(integrante)|(autor)/) ? "persona" : "")));
+	Object.keys(def).forEach(k => (def[k] ||=(k.match(/(integrantes)|(autores)/) ? "persona*" : def[k])));
 	console.log("get_form_data def patched",def);
 	window.xdef= def;
 
@@ -37,6 +39,7 @@ const get_form_data= async (fp,defp) => {
 		}
 	}
 
+	Object.keys(def).forEach(k => {xdata[k]= (def[k].endsWith('*') && !Array.isArray(xdata[k])) ? [xdata[k]] : xdata[k]})
 	return {xdata, def, opts}
 }
 DBG>0 && (window.get_form_data= get_form_data);
@@ -56,14 +59,22 @@ export function FormFromSchema({fp,defp, onClose}) {
 	return (<div>
 		<div>
 		{ data 
-			? (Object.entries(data).map( ([k,v]) => (
-			<InputText 
-				key={k} label={k} 
-				value={meta?.def[k]?.endsWith('*') && !Array.isArray(v) ? [v] : v} 
-				setValue={ v => setData({...data,[k]:v}) } 
-				autocompleteOpts={meta?.def[k] ? meta.opts[ meta.def[k].replace('*','') ]: null}
-				multiple={meta?.def[k]?.endsWith('*')}
-			/>)))
+			? (Object.keys({...meta.def, ...data}).map( (k) => { let v= data[k];
+				if (meta?.def[k]=='si_no') {
+					return (<div key={k} className="p-inputgroup flex-1" style={{marginTop: "2rem"}}>
+     					<label htmlFor={k}>{k}</label>
+							<SelectButton id={k} value={v} onChange={(e) => setData({...data,[k]:e.value})} options={['Si','No']} />
+					</div>)
+				} else {
+					return <InputText 
+						key={k} label={k} 
+						value={v}
+						setValue={ v => setData({...data,[k]:v}) } 
+						autocompleteOpts={meta?.def[k] ? meta.opts[ meta.def[k].replace('*','') ]: null}
+						multiple={meta?.def[k]?.endsWith('*')}
+					/>
+				}
+			}))
 			: 'Loading...'
 		}
 		</div>

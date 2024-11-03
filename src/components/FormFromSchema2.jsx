@@ -13,15 +13,9 @@ import { apic_get_file } from 'src/svc/api';
 import yaml from 'js-yaml';
 const get_form_data= async (fp,defp) => {
 	const pfx= '/aa/xyaml';
-	let def= yaml.load( await apic_get_file(defp) );
-	Object.keys(def).forEach(k => (def[k] ||=(k.match(/(director)|(integrante)|(autor)/) ? "persona" : "")));
-	Object.keys(def).forEach(k => (def[k] ||=(k.match(/(integrantes)|(autores)/) ? "persona*" : def[k])));
-	console.log("get_form_data def patched",def);
-	window.xdef= def;
 
+	let def= yaml.load( await apic_get_file(defp) );
 	let xdata= yaml.load( await apic_get_file(fp) );
-	Object.keys(def).forEach(k => (xdata[k]||='',xdata[k]=typeof(xdata[k])=='object' ? JSON.stringify(xdata[k]) : xdata[k]));
-	Object.keys(xdata).forEach(k => ((xdata[k]||=''),xdata[k]=typeof(xdata[k])=='object' ? JSON.stringify(xdata[k]) : xdata[k]));
 
 	let opts= {};
 	opts.persona= await apic_get_file(pfx+'/data'+'/personas.tsv')
@@ -31,15 +25,22 @@ const get_form_data= async (fp,defp) => {
 			));
 
 	for (let k in def) {
-		let col= (def[k] || k.replace(/(_\w)?_id$/,'')).replace(/\*/g,'');
-		def[k] ||= col;
-		if (col!=k && !opts[col]) {
-			let src= await apic_get_file(pfx+'/data/'+col+'.tsv');
-			opts[col]= src.split(/[\r\n]+/);
+		if (def[k]=='si_no' || def[k].startsWith('|')) {
+		} else {
+			let col= (def[k] || k.replace(/(_\w)?_id$/,'')).replace(/\*/g,'');
+			def[k] ||= col;
+			if (col!=k && !opts[col]) {
+				let src= await apic_get_file(pfx+'/data/'+col+'.tsv');
+				opts[col]= src.split(/[\r\n]+/);
+			}
 		}
 	}
 
+	Object.keys(def).forEach(k => (xdata[k]||='')); //A: xdata para toda k en def
+	Object.keys(xdata).forEach(k => ((xdata[k]||=''),xdata[k]=typeof(xdata[k])=='object' ? JSON.stringify(xdata[k]) : xdata[k])); //A: todo v es string
+
 	Object.keys(def).forEach(k => {xdata[k]= (def[k].endsWith('*') && !Array.isArray(xdata[k])) ? [xdata[k]] : xdata[k]})
+
 	return {xdata, def, opts}
 }
 DBG>0 && (window.get_form_data= get_form_data);
@@ -64,6 +65,11 @@ export function FormFromSchema({fp,defp, onClose}) {
 					return (<div key={k} className="p-inputgroup flex-1" style={{marginTop: "2rem"}}>
      					<label htmlFor={k}>{k}</label>
 							<SelectButton id={k} value={v} onChange={(e) => setData({...data,[k]:e.value})} options={['Si','No']} />
+					</div>)
+				} else if (meta?.def[k]?.startsWith('|')) {
+					return (<div key={k} className="p-inputgroup flex-1" style={{marginTop: "2rem"}}>
+     					<label htmlFor={k}>{k}</label>
+							<SelectButton id={k} value={v} onChange={(e) => setData({...data,[k]:e.value})} options={meta.def[k].split('|').slice(1)} />
 					</div>)
 				} else {
 					return <InputText 

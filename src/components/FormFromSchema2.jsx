@@ -27,7 +27,7 @@ const get_form_data= async (fp,defp) => {
 	opts.persona= await apic_get_file(pfx+'/data'+'/personas.tsv')
 			.then(r => (
 				r.split(/[\r\n]+/)
-				.map(l => {let x= l.split(/\t/); return x[2]+', '+x[1]})
+				.map(l => {let x= l.split(/\t/); return x[2]+', '+x[1]+' '+x[3]})
 			));
 
 	for (let k in def) {

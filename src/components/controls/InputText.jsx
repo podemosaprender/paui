@@ -3,11 +3,12 @@ import React, { useState, useRef } from "react";
 import { Button } from "primereact/button";
 import { FloatLabel } from "primereact/floatlabel";
 import { InputText as PrimeInputText } from "primereact/inputtext";
+import { InputTextarea } from "primereact/inputtextarea";
 import { AutoComplete } from "primereact/autocomplete";
 
 //SEE: https://primereact.org/autocomplete/#dropdown
 //SEE: https://primereact.org/autocomplete/#multiple (agregar "query (+)" como opcion en opciones)
-export function InputText({value,setValue,label,id,multiple,autocompleteOpts,autocompleteFn}) {
+export function InputText({value,setValue,label,id,multiple,rows,autocompleteOpts,autocompleteFn}) {
 	multiple && console.log("InputText multiple",label,value);
 	const inputRef= useRef(null)
 	const [items, setItems]= useState([]);
@@ -32,7 +33,10 @@ export function InputText({value,setValue,label,id,multiple,autocompleteOpts,aut
 					? (multiple ? <AutoComplete ref={inputRef} id={id || label} value={value} onChange={(e) => setValue(e.value)} suggestions={items} completeMethod={search} multiple />
 						 : <AutoComplete ref={inputRef} id={id || label} value={value} onChange={(e) => setValue(e.value)} suggestions={items} completeMethod={search} dropdown />
 					)
-			    : <PrimeInputText ref={inputRef} id={id || label} value={value} onChange={(e) => setValue(e.target.value)} />	
+			    : (
+						rows>0 ?  <InputTextarea ref={inputRef} autoResize value={value||''} onChange={(e) => setValue(e.target.value)} rows={rows} />
+						: <PrimeInputText ref={inputRef} id={id || label} value={value} onChange={(e) => setValue(e.target.value)} />	
+					)
 				}
 			<label htmlFor={id || label}>{label}</label>
 			</FloatLabel>

@@ -37,7 +37,18 @@ const get_form_data= async (fp,defp) => {
 	}
 
 	Object.keys(def).forEach(k => (xdata[k]||='')); //A: xdata para toda k en def
-	Object.keys(xdata).forEach(k => ((xdata[k]||=''),xdata[k]=typeof(xdata[k])=='object' ? JSON.stringify(xdata[k]) : xdata[k])); //A: todo v es string
+	Object.keys(xdata).forEach(k => {
+		xdata[k]||=null;
+		if (xdata[k] && def[k]=='persona*') {
+			xdata[k]= Object.values(xdata[k]).map(v => v.apellido+', '+v.nombre+' '+v.email)
+		} else if (xdata[k] && def[k]=='persona*') {
+			let v= xdata[k];
+			xdata[k]= v.apellido+', '+v.nombre+' '+v.email;
+		} 
+		else if (xdata[k] && typeof(xdata[k])=='object') {
+			xdata[k]= JSON.stringify(xdata[k])
+		}
+	}); //A: todo v es string
 
 	Object.keys(def).forEach(k => {xdata[k]= (def[k].endsWith('*') && !Array.isArray(xdata[k])) ? [xdata[k]] : xdata[k]})
 
@@ -78,6 +89,7 @@ export function FormFromSchema({fp,defp, onClose}) {
 						setValue={ v => setData({...data,[k]:v}) } 
 						autocompleteOpts={meta?.def[k] ? meta.opts[ meta.def[k].replace('*','') ]: null}
 						multiple={meta?.def[k]?.endsWith('*')}
+						rows={'resumen titulo'.split(' ').indexOf(k)>-1 ? 1 : null}
 					/>
 				}
 			}))

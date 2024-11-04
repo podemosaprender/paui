@@ -72,26 +72,26 @@ export function FormFromSchema({fp,defp, onClose}) {
 		<div>
 		{ data 
 			? (Object.keys({...meta.def, ...data}).map( (k) => { let v= data[k];
-				if (meta?.def[k]=='si_no') {
-					return (<div key={k} className="p-inputgroup flex-1" style={{marginTop: "2rem"}}>
-     					<label htmlFor={k}>{k}</label>
-							<SelectButton id={k} value={v} onChange={(e) => setData({...data,[k]:e.value})} options={['Si','No']} />
+					return (		
+						<div key={k} className="field grid" style={{marginTop: "2rem"}}>
+						<label htmlFor={k} className="col-12 mb-2 md:col-2 md:mb-0">{k.replace(/_+/g,' ')}</label>
+						<div className="col-12 md:col-10">{
+							(meta?.def[k]=='si_no') ?  
+								<SelectButton id={k} 
+									value={v} onChange={(e) => setData({...data,[k]:e.value})} 
+									options={['Si','No']} 
+								/> :
+							(meta?.def[k]?.startsWith('|')) ?
+								<SelectButton id={k} value={v} onChange={(e) => setData({...data,[k]:e.value})} options={meta.def[k].split('|').slice(1)} /> :
+							<InputText 
+								key={k} label={k} 
+								value={v} setValue={ v => setData({...data,[k]:v}) } 
+								autocompleteOpts={ meta?.def[k] ? meta.opts[ meta.def[k].replace('*','') ]: null }
+								multiple={ meta?.def[k]?.endsWith('*') }
+								rows={'resumen titulo'.split(' ').indexOf(k)>-1 ? 1 : null}
+							/>
+						}</div>
 					</div>)
-				} else if (meta?.def[k]?.startsWith('|')) {
-					return (<div key={k} className="p-inputgroup flex-1" style={{marginTop: "2rem"}}>
-     					<label htmlFor={k}>{k}</label>
-							<SelectButton id={k} value={v} onChange={(e) => setData({...data,[k]:e.value})} options={meta.def[k].split('|').slice(1)} />
-					</div>)
-				} else {
-					return <InputText 
-						key={k} label={k} 
-						value={v}
-						setValue={ v => setData({...data,[k]:v}) } 
-						autocompleteOpts={meta?.def[k] ? meta.opts[ meta.def[k].replace('*','') ]: null}
-						multiple={meta?.def[k]?.endsWith('*')}
-						rows={'resumen titulo'.split(' ').indexOf(k)>-1 ? 1 : null}
-					/>
-				}
 			}))
 			: 'Loading...'
 		}

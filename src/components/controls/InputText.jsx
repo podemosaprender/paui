@@ -27,8 +27,7 @@ export function InputText({value,setValue,label,id,multiple,rows,autocompleteOpt
 	}
 	
 	return (
-		<div key={id} className="p-inputgroup flex-1" style={{marginTop: "2rem"}}>
-			<FloatLabel>
+		<div className="p-inputgroup flex-1">
         { hasAutocomplete
 					? (multiple ? <AutoComplete ref={inputRef} id={id || label} value={value} onChange={(e) => setValue(e.value)} suggestions={items} completeMethod={search} multiple />
 						 : <AutoComplete ref={inputRef} id={id || label} value={value} onChange={(e) => setValue(e.value)} suggestions={items} completeMethod={search} dropdown />
@@ -38,8 +37,6 @@ export function InputText({value,setValue,label,id,multiple,rows,autocompleteOpt
 						: <PrimeInputText ref={inputRef} id={id || label} value={value} onChange={(e) => setValue(e.target.value)} />	
 					)
 				}
-			<label htmlFor={id || label}>{label}</label>
-			</FloatLabel>
 			<Button icon="pi pi-times" severity="danger" onClick={ () => { setValue(''); inputRef.current?.focus() }} />
 		</div>
 	)

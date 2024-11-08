@@ -47,11 +47,14 @@ export function Editor({fp, value, onChange, onClose}) {
   useEffect(() => { if (editor.current) { setContainer(editor.current); } }, [editor.current]);
 
 	return (<div>
-		<Button label="ESC" onClick={ () => {
-			Vim.handleKey(getCM(view),'<Esc>')
-			view.focus();
-		}} />
-		<Button label="CLOSE" onClick={() => onClose(fp)} />
+		<div className="flex gap-2">
+			<Button label="ESC" onClick={ () => {
+				Vim.handleKey(getCM(view),'<Esc>')
+				view.focus();
+			}} />
+			<Button label="CLOSE" onClick={() => onClose(fp)} />
+			<Button icon="pi pi-arrow-left" label="Volver a vista de formulario" />
+		</div>
 		<div ref={editor} />
 	</div>);
 }

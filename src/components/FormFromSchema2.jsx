@@ -6,6 +6,7 @@ import { InputText } from './controls/InputText';
 import { SelectButton } from 'primereact/selectbutton';
 import { FloatLabel } from "primereact/floatlabel";
 import { Button } from 'primereact/button';
+import { Sidebar } from 'primereact/sidebar';
 
 import { apic_get_file } from 'src/svc/api';
 
@@ -60,6 +61,7 @@ DBG>0 && (window.get_form_data= get_form_data);
 export function FormFromSchema({fp,defp, onClose}) {
 	const [data,setData]= useState(null)
 	const [meta,setMeta]= useState(null)
+	const [visible, setVisible] = useState(false)
 	useEffect(() => {
 		get_form_data(fp,defp).then( dataAndMeta => {
 			setMeta( dataAndMeta );
@@ -69,6 +71,21 @@ export function FormFromSchema({fp,defp, onClose}) {
 	},[defp]);
 
 	return (<div>
+		<div className="controles flex gap-2">
+			<Button label="Close" onClick={onClose} />
+			<div>
+				<Sidebar visible={visible} onHide={() => setVisible(false)}>
+					<h2>Editar en formato...</h2>
+					<Button className="text-left w-full">YAML (abre editor de texto)</Button>
+					<h2>Descargar archivos</h2>
+					<div className="flex flex-column gap-2">
+						<Button className="text-left w-full">Generar TSV descargable</Button>
+						<Button className="text-left w-full">Generar HTML descargable</Button>
+					</div>
+				</Sidebar>
+				<Button icon="pi pi-arrow-right" className="flex gap-2" onClick={() => setVisible(true)}>Generar/convertir...</Button>
+			</div>
+		</div>
 		<div>
 		{ data 
 			? (Object.keys({...meta.def, ...data}).map( (k) => { let v= data[k];
@@ -96,8 +113,6 @@ export function FormFromSchema({fp,defp, onClose}) {
 			: 'Loading...'
 		}
 		</div>
-		<div>
-			<Button label="Close" onClick={onClose} />
-		</div>
+
 	</div>)
 }

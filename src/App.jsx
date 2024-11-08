@@ -11,6 +11,7 @@ import { Editor } from 'src/components/Editor'
 import { Files } from 'src/components/Files';
 import { FormFromSchema } from 'src/components/FormFromSchema2';
 import { Generator } from 'src/components/Generator';
+import { Home } from 'src/components/Home';
 
 import { ensure_kv } from 'src/svc/util';
 import { broadcastChannel, apic_upload, apic_set_file, apic_get_file, apic_call } from 'src/svc/api';
@@ -50,7 +51,8 @@ export default function Menu({options, value, setValue}) {
 export function App() {
 	const [menu,setMenu]= useState({});
 
-	const [view,setView]= useState('generator');
+	// const [view,setView]= useState('generator');
+	const [view,setView]= useState('home'); //TEMP
 	const [pk,setPk]= useState('')
 
 	const [txt,setTxt]= useState('')
@@ -66,7 +68,8 @@ export function App() {
 	const onMenuClose= async (menuKey) => {
 		delete menu[menuKey];
 		setMenu(menu);
-		setView('generator');
+		// setView('generator');
+		setView('home'); //TEMP
 	}
 
 	const onFileEdit= async (path,fname) => {
@@ -94,6 +97,7 @@ export function App() {
 						menuViewData.t=='form' ?  <FormFromSchema fp={menuViewData.fp} defp={menuViewData.defp} onClose={menuViewData.onClose} /> :
 						<h3>Todo { menuViewData.t }</h3>
 					) :
+					view=='home' ? <Home /> :
 					view=='editor' ? <Editor value={txt} /> :
 					view=='form' ? <FormFromSchema /> :
 					view=='files' ? <Files onFileEdit={onFileEdit} /> :
@@ -101,7 +105,7 @@ export function App() {
 					<h3>Unknown view {view}</h3>
 				}
 			</div>
-			<Menu options={['generator','files','form','editor', ...Object.keys(menu)]} setValue={setView} value={view} />
+			<Menu options={['home', 'generator','files','form','editor', ...Object.keys(menu)]} setValue={setView} value={view} />
 			<PWABadge/>
 		</div>
 	)

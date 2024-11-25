@@ -81,6 +81,8 @@ export function App() {
 		} else {
 			let s; try {s = await apic_get_file(fp)}catch(ex){}
 			let w= async (txt) => (await apic_set_file(fp,txt));
+			console.log("onFileEdit",typeof(s))
+			window.xf= s;
 			menuEntry= {t: 'editor',fp,txt: s||'', onChange: w, onClose: () => onMenuClose(fp) }
 		}
 		setMenu({...menu, [fp]: menuEntry })
@@ -93,7 +95,7 @@ export function App() {
 			<div style={{ height: '90vh', overflowY: 'scroll'}}>
 				{ 
 					menuViewData ? (
-						menuViewData.t=='editor' ?  <Editor fp={menuViewData.fp} value={menuViewData.txt} onChange={menuViewData.onChange} onClose={menuViewData.onClose} /> :
+						menuViewData.t=='editor' ?  <Editor fp={menuViewData.fp} value={''+menuViewData.txt} onChange={menuViewData.onChange} onClose={menuViewData.onClose} /> :
 						menuViewData.t=='form' ?  <FormFromSchema fp={menuViewData.fp} defp={menuViewData.defp} onClose={menuViewData.onClose} /> :
 						<h3>Todo { menuViewData.t }</h3>
 					) :

@@ -9,7 +9,7 @@ import { FileUpload } from 'primereact/fileupload';
 import { InputText } from './controls/InputText';
 import { ToggleButton } from 'primereact/togglebutton'
 
-import { apic_get_file, apic_get_file_blob, apic_upload, apic_rm_file } from 'src/svc/api';
+import { apic_get_file, apic_get_file_blob, apic_upload, apic_rm_file, apic_call } from 'src/svc/api';
 import { new_zip_model } from 'src/svc/zip';
 
 window.apic_get_file_blob= apic_get_file_blob;
@@ -18,6 +18,7 @@ window.apic_get_file_blob= apic_get_file_blob;
 import { open, send } from 'src/svc/net_peerjs';
 window.peeropen= open;
 window.peersend= send;
+window.apic_call= apic_call
 //XXX:MOVER_A_APP }
 
 
@@ -164,7 +165,7 @@ export function Files({onFileEdit}) {
 							onClick={
 								d.type!='dir' 
 								? (
-									name.match(/\.((txt)|(md)|(js)|(json)|(yaml)|(tsv)|(html)|(css))$/) 
+									name.match(/\.((txt)|(md)|(js)|(json)|(yaml)|(tsv)|(html)|(css)|(njk))$/) 
 										? (() => onFileEdit(path,name))
 										: name.match(/\.pdf$/) 
 										? (() => onPDF(path,name))

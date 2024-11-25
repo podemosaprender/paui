@@ -34,7 +34,7 @@ export const clone= async (repo_url, dst, auth_opts={}) => {
 	console.log("GIT CLONE OPTS",clone_opts);
 	const r0= await git.clone(clone_opts);
 	console.log("GIT CLONE R0",r0);
-	const rfiles= fsp.readdir(dst);
+	const rfiles= await fsp.readdir(dst);
 	console.log("GIT CLONE R FILES",dst,rfiles);
 }
 

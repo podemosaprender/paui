@@ -239,7 +239,7 @@ const apic_rm_file= async (fpath) => (await apic_call('rm_file', [{url:{pathname
 const apic_get_file_impl_= async (fpath) => (
 	(await apic_call('get_file', [{url:{pathname: fpath}, noResponse: true}]))
 );
-const apic_get_file= async (fpath) => (await apic_get_file_impl_(fpath).then(r=> (r.text ? r.text() : r)))
+const apic_get_file= async (fpath) => (await apic_get_file_impl_(fpath).then(r=> (r.text ? r.text() : r.buffer ? (new TextDecoder()).decode(r) : r)))
 const apic_get_file_blob= async (fpath) => (await apic_get_file_impl_(fpath)) //A: File <= Blob
 //S: CLIENT } ************************************************
 

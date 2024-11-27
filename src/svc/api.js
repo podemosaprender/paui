@@ -1,4 +1,4 @@
-//INFO: toda la API aqui para poder desarrollar SIN SW primero pero despues usarla desde ahi
+//iNFO: toda la API aqui para poder desarrollar SIN SW primero pero despues usarla desde ahi
 
 const DBG= 0;
 
@@ -11,9 +11,10 @@ broadcastChannel.postMessage('API starting')
 
 //S: API { **************************************************
 import { genKeypairSign, exportKey, importKey, sign } from 'src/svc/crypto';
-import { fsp, clone } from 'src/svc/git'
+import { fsp, git_clone, git_file_add, git_commit, git_push } from 'src/svc/git'
+//A: ONE filesystem instance, from git
 
-if (DBG>1) {
+if (true || DBG>1) {
 	self.xfsp= fsp;
 }
 
@@ -77,8 +78,11 @@ const fsWriteHandler= async ({url, eventOrKV, noResponse}) => {
 		try {
 			await ensure_dir(fpath, dirSeen, 1); //A: mkdir for everything before filename
 			//DBG: console.log("fsWriteHandler ensure_dir OK",fpath);
-			await	fsp.writeFile(fpath, mediaFile);
-			//DBG: console.log("fsWriteHandler fsp OK",fpath)
+			const data= mediaFile?.arrayBuffer ? new Uint8Array(await mediaFile.arrayBuffer()) : mediaFile;
+			//A: parece guardar tipo File pero despues no los lee
+			await	fsp.writeFile(fpath, data);
+			//DBG: 
+			console.log("fsWriteHandler fsp OK",fpath,typeof(mediaFile)); self.xmf= mediaFile;
 		} catch (ex) { console.log("fsWriteHandler fsp ERROR",dst, mediaFiles.name,fpath,ex) }
   }
 
@@ -155,10 +159,14 @@ const api_registerRoutes= (registerRoute) => {
 const ApiCmd_= {};
 ApiCmd_.key_pub= (kname) => _key_for(kname,'.pub')
 ApiCmd_.key_sign= _sign; //XXX:SEC
-ApiCmd_.git_clone= clone;
 ApiCmd_.get_file= fsReadHandler
 ApiCmd_.set_file= fsWriteHandler
 ApiCmd_.rm_file= fsRmHandler
+
+ApiCmd_.git_clone= git_clone;
+ApiCmd_.git_file_add= git_file_add;
+ApiCmd_.git_commit= git_commit;
+ApiCmd_.git_push= git_push;
 
 const api_onmessage= async (event) => {
 	let {cmd,args,reqId}= event.data || {cmd:'UNKNOWN'};

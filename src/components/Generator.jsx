@@ -11,7 +11,14 @@ const PFX='/aa/xyaml';
 
 //XXX:LIB { U: procesar planilla/tsv
 
+const zip_kv= (ks, vs) => Object.assign(... ks.map( (k,i) => ({[k]:vs[i]}) ));
 const sort_kv= (kv) => Object.assign(...Object.keys(kv).sort().map(k => ({[k]:kv[k]})))
+const lol_to_lokv= (lol) => lol.slice(1).map( r => zip_kv(lol[0],r) );
+const lol_to_kvokv= (lol, idCol='id',idxCol='rowidx') => lol.slice(1).reduce( (acc,r,idx) => {
+	let kv= zip_kv(lol[0],r); kv['rowidx']= idx;
+	acc[kv[idCol]]= kv;
+	return acc;
+}, {});
 
 const norm_col= (d, colidx) => d.reduce( (acc,el,idx) => {
 	el[colidx].split(/\s*;\s*/).forEach( k0 => {
@@ -102,7 +109,7 @@ async function on_generate_tsv() {
 	blob_download(s,'xpj1.tsv');
 }
 
-const on_generate_html= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
+const on_generate_htmlFromYaml= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
 	const tpl_src= await apic_get_file(PFX+'/tpl/tpl_proj.html');
 	const tpl_lol= parseJinjaLike(tpl_src)
 	console.log("TPL_LOL",tpl_lol);
@@ -119,6 +126,12 @@ const on_generate_html= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza p
 	blob_download(await zip.getBlob(),'xhtml_proj.zip');
 };
 
+const on_generate_html= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
+	let proy= await get_file_tsv('ries_proy.tsv');
+	console.log("proy",proy.length); window.proy= proy;
+	let proy_kv= lol_to_kvokv(proy);
+	window.proy_kv= proy_kv;
+}
 //YAML }
 
 //XXX:MOVER_A_LIB {

@@ -14,11 +14,16 @@ const PFX='/aa/xyaml';
 const zip_kv= (ks, vs) => Object.assign(... ks.map( (k,i) => ({[k]:vs[i]}) ));
 const sort_kv= (kv) => Object.assign(...Object.keys(kv).sort().map(k => ({[k]:kv[k]})))
 const lol_to_lokv= (lol) => lol.slice(1).map( r => zip_kv(lol[0],r) );
-const lol_to_kvokv= (lol, idCol='id',idxCol='rowidx') => lol.slice(1).reduce( (acc,r,idx) => {
-	let kv= zip_kv(lol[0],r); kv['rowidx']= idx;
-	acc[kv[idCol]]= kv;
-	return acc;
-}, {});
+const lol_to_kvokv= (lol, onErr=null, idCol='id',idxCol='rowidx') => {
+	if (Array.isArray(idCol)) { idCol= idCol.find(c => lol[0].indexOf(c)>-1) }
+	return lol.slice(1).reduce( (acc,r,idx) => {
+		let kv= zip_kv(lol[0],r); kv['rowidx']= idx;
+		let id= kv[idCol];
+		if (onErr) { let prev= acc[id]; if (prev) { onErr('id-duplicated',{id, idCol, prev}) }}
+		acc[id]= kv;
+		return acc;
+	}, {});
+}
 
 const norm_col= (d, colidx) => d.reduce( (acc,el,idx) => {
 	el[colidx].split(/\s*;\s*/).forEach( k0 => {
@@ -127,10 +132,28 @@ const on_generate_htmlFromYaml= async (e) => { //XXX:elegir archivos //XXX:LIB a
 };
 
 const on_generate_html= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
-	let proy= await get_file_tsv('ries_proy.tsv');
-	console.log("proy",proy.length); window.proy= proy;
-	let proy_kv= lol_to_kvokv(proy);
-	window.proy_kv= proy_kv;
+	let rels= {
+		'proy': {pfx:'ries_'},
+		'pub': {pfx:'ries_'},
+		'personas':{pfx:'ries_'},
+		'clasificaciones':{pfx:'ries_',idCol:'id'},
+		'financiamientos':{},
+		'instituciones':{},
+		'regiones_educativas':{},
+		'tipos_de_productos':{},
+		'cpres':{},
+		'gestion':{},
+	}
+
+	let D= {};
+	await Promise.all(Object.entries(rels).map( async ([k,def]) => {
+		let on_err= (t,d) => console.log('ERROR',k,t,d,def);	
+		D[k]= lol_to_kvokv( await get_file_tsv((def.pfx || 'aa/xyaml/data/')+k+'.tsv'), on_err,(def.idCol || ['slug','sigla','id']) );
+		window[k]= D[k];
+	}))
+
+	blob_download(new Blob([yaml.dump(D)]),'x.txt')
+	//alert("on_generate_html")
 }
 //YAML }
 

@@ -113,14 +113,13 @@ async function on_generate_tsv() {
 	//DBG: console.log("SEE xout"); window.xout= s;
 	blob_download(s,'xpj1.tsv');
 }
-
-const on_generate_htmlFromYaml= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
-	const tpl_src= await apic_get_file(PFX+'/tpl/tpl_proj.html');
+const on_generate_html_impl= async (forEachProj) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
+	const tpl_src= await apic_get_file('tpl_proj.html');
 	const tpl_lol= parseJinjaLike(tpl_src)
 	console.log("TPL_LOL",tpl_lol);
 	const zip= new_zip_model();
 	let i=0;
-	await yaml_dir_to_kv(PFX+'/pj', async (fname,p) => {
+	await forEachProj( async (p) => {
 		if (true || p.id=="1716") { //XXX:DBG
 			let s= tpl_expand(tpl_lol.all[2],{pj: p});
 			let r= await zip.addFile(new File([s],p.id+''+'.html'));
@@ -131,7 +130,7 @@ const on_generate_htmlFromYaml= async (e) => { //XXX:elegir archivos //XXX:LIB a
 	blob_download(await zip.getBlob(),'xhtml_proj.zip');
 };
 
-const on_generate_html= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
+const forEachProj_tsv= async (cb) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
 	let rels= {
 		'proy': {pfx:'ries_'},
 		'pub': {pfx:'ries_'},
@@ -163,13 +162,13 @@ const on_generate_html= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza p
 			p[k+'_ori']=p[k];
 		p[k]= t=='*' ? vs.reduce( (acc, vk) => {acc[vk]= find_one(vk); return acc}, {})
 								 : find_one(vs[0])
+		}
 	}
-}
 
-Object.values(D.clasificaciones).forEach(c => { if (c.id.length>1) { c.lvl= 'sub_' } });
+	Object.values(D.clasificaciones).forEach(c => { c.lvl= (c.id.length>1) ? 'sub_' : '' });
 
-Object.values(D.proy).forEach(p => {
-	expand_rel(p,'director','personas','1');	
+	Object.values(D.proy).forEach(p => {
+		expand_rel(p,'director','personas','1');	
 		expand_rel(p,'instituciones','instituciones','1');	
 		expand_rel(p,'regiones_educativas','regiones_educativas','1');	
 		expand_rel(p,'cpres','cpres','1');	
@@ -178,11 +177,16 @@ Object.values(D.proy).forEach(p => {
 		expand_rel(p,'financiamientos','financiamientos','*');	
 		p.clasificaciones= p.clasificaciones && p.clasificaciones.replace(/(\d)([a-z])/g,'$1 ; $1$2'); //XXX:hack horrible para incluir tema si hay subtema!
 		expand_rel(p,'clasificaciones','clasificaciones','*');	
-	
 	});
 
-	blob_download(new Blob([yaml.dump(D)]),'x.txt')
+	for (let p of Object.values(D.proy)) { await cb(p); }
+	//blob_download(new Blob([yaml.dump(D)]),'x.txt')
+	
 	//alert("on_generate_html")
+}
+
+const on_generate_html= async (e) => {
+	await on_generate_html_impl(forEachProj_tsv);
 }
 //YAML }
 
@@ -198,7 +202,7 @@ const tpl_expand1= (tpl, kv) => {
 			r= kOrConst.startsWith('"') ? kOrConst : get_p(kv,'.'+kOrConst,false,/(\.)/);
 			return r==null;
 		});
-		return (r || ('XXX_MISSING_'+JSON.stringify(ksl)));
+		return (r===undefined ? ('XXX_MISSING_'+JSON.stringify(ksl)) : r);
 	});
 }
 

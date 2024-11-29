@@ -127,7 +127,7 @@ export function Files({onFileEdit}) {
 
 	const onFileView= async (path,name) => {
 		let blob= await apic_get_file_blob(path+'/'+name)
-		let u= URL.createObjectURL(blob);
+		let u= URL.createObjectURL(blob instanceof Uint8Array ? new File([blob],name) : blob);
 		window.open(u,path+name);
 	}
 

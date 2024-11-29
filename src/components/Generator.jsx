@@ -4,23 +4,65 @@ import { Button } from 'primereact/button';
 import { apic_get_file, apic_set_file, apic_upload, apic_get_file_blob } from 'src/svc/api';
 import { new_zip_model } from 'src/svc/zip';
 import { blob_download } from 'src/rte/lib/util';
+import slugify from 'slugify';
 
 
 const PFX='/aa/xyaml';
 
-//XXX:LIB { U: planilla google
-const get_http= async (url,fp) => {
-	let urlPx= 'https://api.cors.lol/' + url.replace(/^https?:\/\//,''); //encodeURIComponent(url);
-	let x= await fetch(urlPx).then(r => r.blob())
-	apic_set_file(fp,x);
-	alert("saved "+fp);
+//XXX:LIB { U: procesar planilla/tsv
+
+const sort_kv= (kv) => Object.assign(...Object.keys(kv).sort().map(k => ({[k]:kv[k]})))
+
+const norm_col= (d, colidx) => d.reduce( (acc,el,idx) => {
+	el[colidx].split(/\s*;\s*/).forEach( k0 => {
+		let k= k0.replace(/\s+/,' ').trim().toLowerCase(); 
+		(acc[k]=(acc[k]||[])).push(idx); 
+	});
+	return acc;
+},{}); 
+
+const parse_tsv= (src) => {
+	let d= src.split(/\r?\n/).map(l => l.split(/\t/))
+	return d;
 }
 
-const url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQdbTUxtm4iXZOwlIag0cvmXZyWil8rcf4tqGDLtW59N2TxyjqrR5jZZbNkQ2tkVA/pub?gid=1259830238&single=true&output=tsv'
+const get_file_tsv= async (apath) => {
+	let src= await apic_get_file(apath)
+	return parse_tsv(src);
+}
+
+const on_norm_tsv= async () => {
+	return get_file_tsv('prod.tsv')
+}
+
+window.slugify= slugify;
+window.ser= (o) => JSON.stringify((typeof(o)=="object" && !Array.isArray(o)) ? sort_kv(o) : o,0,2);
+window.get_file_tsv= get_file_tsv;
+window.on_norm_tsv= on_norm_tsv;
+window.norm_col= norm_col;
+//XXX:LIB } U: procesar planilla/tsv
+
+//XXX:LIB { U: planilla google
+const get_http= async (url,fp) => {
+	let urlPx= 'https://proxy.o-o.fyi/' + url.replace(/^https?:\/\//,''); //encodeURIComponent(url);
+	let x= await fetch(urlPx).then(r => r.blob())
+	apic_set_file(fp,x);
+	console.log("saved "+fp);
+}
+window.get_http= get_http;
+
+const url='https://docs.google.com/spreadsheets/d/e/2PACX-1vSA4XW7aPv5E7QOpMYk1vYuk_DY3xtbG4TY-oWomKojuaeJh4apwF1PfTx6ElQe7AQIvD0egAH33lWs/pub?gid=1828880156&single=true&output=tsv'
 const get_tsv= async () => {
 	let x= await fetch(url).then(r => r.text())
-	apic_set_file('prod.tsv',x);
-	alert("saved prod.tsv");
+	await apic_set_file('links.tsv',x);
+	console.log("saved links.tsv",x);
+	let links_data= parse_tsv(x);
+	await Promise.all(links_data.slice(1).map( async r => {
+		if (r[0]!='links' && r[1].startsWith('http')) {
+			console.log("download",r);
+			return await get_http(r[1],'ries_'+r[0]);
+		}
+	}));
 }
 
 const zip_url='https://drive.usercontent.google.com/download?id=1Oes5jM4mlNUdsMI2Amz6-aXkpPYdCJXW&export=download&authuser=0' //FROM browser 'https://drive.google.com/file/d/1Oes5jM4mlNUdsMI2Amz6-aXkpPYdCJXW/view?usp=sharing'
@@ -142,7 +184,7 @@ async function zip_expand() {
 		apic_set_file('aa/'+e.filename, await get_file_zip(e))
 	}));
 }
-//XXX:MOVER_A_LIB {
+//XXX:MOVER_A_LIB }
 
 export function Generator() {
 	const [path, setPathImpl]= useState('');

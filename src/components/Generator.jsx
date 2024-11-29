@@ -177,7 +177,17 @@ const forEachProj_tsv= async (cb) => { //XXX:elegir archivos //XXX:LIB alcanza p
 		expand_rel(p,'financiamientos','financiamientos','*');	
 		p.clasificaciones= p.clasificaciones && p.clasificaciones.replace(/(\d)([a-z])/g,'$1 ; $1$2'); //XXX:hack horrible para incluir tema si hay subtema!
 		expand_rel(p,'clasificaciones','clasificaciones','*');	
+		p.publicaciones= {};
 	});
+
+	Object.values(D.pub).forEach(pu => {
+		expand_rel(pu,'tipos_de_productos','tipos_de_productos','1');	
+		expand_rel(pu,'autores','personas','*');	
+		pu.url_adjunto ||= ('/uploads/productos/' + pu.nombre_adjunto);
+		let pj_id= pu.id.split(/__/)[0];
+		D.proy[pj_id].publicaciones[pu.id]= pu;
+	});
+
 
 	for (let p of Object.values(D.proy)) { await cb(p); }
 	//blob_download(new Blob([yaml.dump(D)]),'x.txt')
@@ -199,15 +209,15 @@ const tpl_expand1= (tpl, kv) => {
 		let ksl= ks.trim().trim().split(/\s+or\s+/);
 		let r;
 		ksl.every( kOrConst => {
-			r= kOrConst.startsWith('"') ? kOrConst : get_p(kv,'.'+kOrConst,false,/(\.)/);
-			return r==null;
+			r= kOrConst.startsWith('"') ? kOrConst.replace(/"/g,'') : get_p(kv,'.'+kOrConst,false,/(\.)/);
+			return (r==null || r=="");
 		});
-		return (r===undefined ? ('XXX_MISSING_'+JSON.stringify(ksl)) : r);
+		return (r===undefined ? ('XXX_MISSING_'+JSON.stringify(ksl).replace(/\W+/g,' ')) : r);
 	});
 }
 
 const tpl_expand= (tpl, kv) => {
-	const DBG=1;
+	const DBG=0;
 	return tpl.map(cmd => {
 		if (Array.isArray(cmd)) { let h= cmd[0];
 			if (h=='for') { let [_,colk,names,body]= cmd;

@@ -152,6 +152,35 @@ const on_generate_html= async (e) => { //XXX:elegir archivos //XXX:LIB alcanza p
 		window[k]= D[k];
 	}))
 
+	const expand_rel= (p,k,col,t) => {
+		let vs= p[k] && p[k].split(/\s*;\s*/).map(s=>s.trim()).filter(x=>x);
+		if (vs && vs.length) {
+			let find_one= (vk) => { 
+				let v2= D[col][vk]; 
+				if (v2==null) { console.log('FALTA',vk,col,k,p.id,p.rowidx); }
+				return v2;
+			};
+			p[k+'_ori']=p[k];
+		p[k]= t=='*' ? vs.reduce( (acc, vk) => {acc[vk]= find_one(vk); return acc}, {})
+								 : find_one(vs[0])
+	}
+}
+
+Object.values(D.clasificaciones).forEach(c => { if (c.id.length>1) { c.lvl= 'sub_' } });
+
+Object.values(D.proy).forEach(p => {
+	expand_rel(p,'director','personas','1');	
+		expand_rel(p,'instituciones','instituciones','1');	
+		expand_rel(p,'regiones_educativas','regiones_educativas','1');	
+		expand_rel(p,'cpres','cpres','1');	
+		expand_rel(p,'gestion','gestion','1');	
+		expand_rel(p,'integrantes','personas','*');	
+		expand_rel(p,'financiamientos','financiamientos','*');	
+		p.clasificaciones= p.clasificaciones && p.clasificaciones.replace(/(\d)([a-z])/g,'$1 ; $1$2'); //XXX:hack horrible para incluir tema si hay subtema!
+		expand_rel(p,'clasificaciones','clasificaciones','*');	
+	
+	});
+
 	blob_download(new Blob([yaml.dump(D)]),'x.txt')
 	//alert("on_generate_html")
 }

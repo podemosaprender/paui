@@ -9,6 +9,8 @@ window.yaml= yaml;
 window.apic_get_file= apic_get_file;
 import { parseJinjaLike, tpl_expand } from 'src/svc/tplJinjaLike'
 
+const DBG=0;
+
 async function yaml_dir_to_kv(path='', onFile) {
 	let ff= JSON.parse(await apic_get_file(path))
 	await Promise.all(
@@ -31,8 +33,8 @@ async function on_generate_tsv() {
 }
 
 import { new_zip_model } from 'src/svc/zip';
-const on_generate_html_impl= async (forEachProj) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
-	const tpl_src= await apic_get_file('tpl_proj.html');
+export const generate_html= async (forEachProj, on_err) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
+	const tpl_src= await apic_get_file('tpl_proj.html'); //XXX:CFG
 	const tpl_lol= parseJinjaLike(tpl_src)
 	console.log("TPL_LOL",tpl_lol);
 	const zip= new_zip_model();
@@ -44,12 +46,14 @@ const on_generate_html_impl= async (forEachProj) => { //XXX:elegir archivos //XX
 			if (i++ % 100==0) console.log(i);
 			return r;
 		}
-	});
+	}, on_err);
 	blob_download(await zip.getBlob(),'xhtml_proj.zip');
 };
 
-const forEachProj_tsv= async (cb) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
-	let rels= {
+export const forEachProj_tsv= async (cb, on_err) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
+	on_err ||= console.log;
+
+	let rels= { //XXX:CFG
 		'proy': {pfx:'ries_'},
 		'pub': {pfx:'ries_'},
 		'personas':{pfx:'ries_'},
@@ -62,11 +66,12 @@ const forEachProj_tsv= async (cb) => { //XXX:elegir archivos //XXX:LIB alcanza p
 		'gestion':{},
 	}
 
+
 	let D= {};
 	await Promise.all(Object.entries(rels).map( async ([k,def]) => {
-		let on_err= (t,d) => console.log('ERROR',k,t,d,def);	
-		D[k]= lol_to_kvokv( await get_file_tsv((def.pfx || 'aa/xyaml/data/')+k+'.tsv'), on_err,(def.idCol || ['slug','sigla','id']) );
-		window[k]= D[k];
+		let on_errDetails= (t,d) => on_err(t, {...d, col: k, def}); 
+		D[k]= lol_to_kvokv( await get_file_tsv((def.pfx || 'aa/xyaml/data/')+k+'.tsv'), on_errDetails,(def.idCol || ['slug','sigla','id']) );
+		DBG && (window[k]= D[k]);
 	}))
 
 	const expand_rel= (p,k,col,t) => {
@@ -74,7 +79,7 @@ const forEachProj_tsv= async (cb) => { //XXX:elegir archivos //XXX:LIB alcanza p
 		if (vs && vs.length) {
 			let find_one= (vk) => { 
 				let v2= D[col][vk]; 
-				if (v2==null) { console.log('FALTA',vk,col,k,p.id,p.rowidx); }
+				if (v2==null) { on_err('data/rel/FALTA',{vk,col,k,id: p.id,rowidx: p.rowidx}) } 
 				return v2;
 			};
 			p[k+'_ori']=p[k];
@@ -106,15 +111,9 @@ const forEachProj_tsv= async (cb) => { //XXX:elegir archivos //XXX:LIB alcanza p
 		D.proy[pj_id].publicaciones[pu.id]= pu;
 	});
 
-
-	for (let p of Object.values(D.proy)) { await cb(p); }
-	//blob_download(new Blob([yaml.dump(D)]),'x.txt')
-	
-	//alert("on_generate_html")
-}
-
-export const on_generate_html= async (e) => {
-	await on_generate_html_impl(forEachProj_tsv);
+	if (cb) {
+		for (let p of Object.values(D.proy)) { await cb(p); }
+	}
 }
 //YAML }
 

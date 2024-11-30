@@ -36,7 +36,7 @@ export default function Menu({options, value, setValue}) {
 export function App() {
 	const [menu,setMenu]= useState({});
 
-	const [view,setView]= useState('home');
+	const [view,setView]= useState('generator');
 	const [pk,setPk]= useState('')
 	const [txt,setTxt]= useState('')
 
@@ -90,7 +90,7 @@ export function App() {
 					<h3>Unknown view {view}</h3>
 				}
 			</div>
-			<Menu options={['home', 'generator','files','form','editor', ...Object.keys(menu)]} setValue={setView} value={view} />
+			<Menu options={['generator','files', ...Object.keys(menu)]} setValue={setView} value={view} />
 			<PWABadge/>
 		</div>
 	)

@@ -79,7 +79,7 @@ export const lol_to_kvokv= (lol, onErr=null, idCol='id',idxCol='rowidx') => {
 	return lol.slice(1).reduce( (acc,r,idx) => {
 		let kv= zip_kv(lol[0],r); kv['rowidx']= idx;
 		let id= kv[idCol];
-		if (onErr) { let prev= acc[id]; if (prev) { onErr('id-duplicated',{id, idCol, prev}) }}
+		if (onErr) { let prev= acc[id]; if (prev) { onErr('data/duplicated/id',{id, idCol, prev, now: kv}) }}
 		acc[id]= kv;
 		return acc;
 	}, {});

@@ -70,6 +70,35 @@ export function ser_p_kv(x,pfx,out_kv={},sep_kv='{',sep_l='[' ) {
 	return out_kv
 }
 
+//S: arrays y objetos, zip, idx *********************************
+export const zip_kv= (ks, vs) => Object.assign(... ks.map( (k,i) => ({[k]:vs[i]}) ));
+export const sort_kv= (kv) => Object.assign(...Object.keys(kv).sort().map(k => ({[k]:kv[k]})))
+export const lol_to_lokv= (lol) => lol.slice(1).map( r => zip_kv(lol[0],r) );
+export const lol_to_kvokv= (lol, onErr=null, idCol='id',idxCol='rowidx') => {
+	if (Array.isArray(idCol)) { idCol= idCol.find(c => lol[0].indexOf(c)>-1) }
+	return lol.slice(1).reduce( (acc,r,idx) => {
+		let kv= zip_kv(lol[0],r); kv['rowidx']= idx;
+		let id= kv[idCol];
+		if (onErr) { let prev= acc[id]; if (prev) { onErr('id-duplicated',{id, idCol, prev}) }}
+		acc[id]= kv;
+		return acc;
+	}, {});
+}
+
+export const norm_col= (d, colidx) => d.reduce( (acc,el,idx) => {
+	el[colidx].split(/\s*;\s*/).forEach( k0 => {
+		let k= k0.replace(/\s+/,' ').trim().toLowerCase(); 
+		(acc[k]=(acc[k]||[])).push(idx); 
+	});
+	return acc;
+},{}); 
+
+export const parse_tsv= (src) => {
+	let d= src.split(/\r?\n/).map(l => l.split(/\t/))
+	return d;
+}
+
+
 //S: web *******************************************************
 export const encode_uri= (s) => encodeURIComponent(s).replace(/%20/g,'+');
 export const ser_urlparams= (v) => Object.entries(v).map( (kv) => kv.map(encode_uri).join('=') ).join('&');

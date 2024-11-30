@@ -1,6 +1,6 @@
 //INFO: convertir lo que hicimos en nunjucks+11ty a un json simple de procesar
 
-//S:LIB {
+//S: parse {
 function parseJinjaLike(src,sfx='',dst={}) {
 	if (!src.match(/\{%\s*macro/)) { src=`{% macro all() %}\n${src}\n{%endmacro%}` }
 	//console.log(srcpath, src.length);
@@ -55,6 +55,56 @@ function parseJinkaLike_toLoL(body,name,args) {
 	});
 	return stackL2R[0];
 }
-//S:LIB }
+//S: parse }
 
-export { parseJinjaLike };
+//S: expand {
+import { get_p } from 'src/rte/lib/util.js';
+const tpl_expand1= (tpl, kv) => {
+	return tpl.replace(/\{\{\s*(.+?)\s*\}\}/gs, (_,ks) => {
+		let ksl= ks.trim().trim().split(/\s+or\s+/);
+		let r;
+		ksl.every( kOrConst => {
+			r= kOrConst.startsWith('"') ? kOrConst.replace(/"/g,'') : get_p(kv,'.'+kOrConst,false,/(\.)/);
+			return (r==null || r=="");
+		});
+		return (r===undefined ? ('XXX_MISSING_'+JSON.stringify(ksl).replace(/\W+/g,' ')) : r);
+	});
+}
+
+const tpl_expand= (tpl, kv) => {
+	const DBG=0;
+	return tpl.map(cmd => {
+		if (Array.isArray(cmd)) { let h= cmd[0];
+			if (h=='for') { let [_,colk,names,body]= cmd;
+				let col= get_p(kv,'.'+colk,false,/(\.)/);
+				DBG && console.log("tpl_expand for",{colk,names},col);
+				return ((DBG && `\n\n<!-- ${JSON.stringify(cmd,0,2)} -->\n\n`)||'')+ ( 
+					(!col) ? '' :
+					( Array.isArray(col) ? col.map( e => { 
+							let kv2={}; kv2[names[0]]= e; 
+							return (((DBG && `\n\n<!-- ${JSON.stringify(kv2,0,2)} -->\n\n`)||'')+
+								 tpl_expand(body, {...kv, ...kv2})
+							)
+						}) :
+						Object.entries(col).map( ([k,v]) => { 
+								let kv2={}; kv2[names[0]]= k;  kv2[names[1]]= v;  
+								return (((DBG && `\n\n<!-- ${JSON.stringify(kv2,0,2)} -->\n\n`)||'')+
+									tpl_expand(body, {...kv, ...kv2})
+								)
+							})
+					).join('')
+				);
+			} else {
+				return `\n\n<!-- TODO:tpl_expand ${JSON.stringify(cmd,0,2)} -->\n\n`
+			}
+		} else {
+			return tpl_expand1(cmd, kv)
+		}
+	}).join('');
+}
+
+window.get_p= get_p;
+window.tpl_expand= tpl_expand;
+//S: expand }
+
+export { parseJinjaLike, tpl_expand };

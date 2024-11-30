@@ -14,26 +14,11 @@ import { Generator } from 'src/components/Generator';
 import { Home } from 'src/components/Home';
 
 import { ensure_kv } from 'src/svc/util';
-import { broadcastChannel, apic_upload, apic_set_file, apic_get_file, apic_call } from 'src/svc/api';
+import { broadcastChannel, apic_set_file, apic_get_file, apic_call } from 'src/svc/api';
 
-import { speech_from_text_p } from 'src/svc/speech-from-text'
+import { speech_from_text_p } from 'src/svc/speech-from-text'; //XXX:
 
-
-// PWA handle files { XXX:LIB
-async function handleFiles(files) {
-	for (const file of files) {
-		const blob = await file.getFile();
-		//blob.handle = file;
-		//const text = await blob.text();
-		console.log(`${file.name} handled`);
-	}
-}
-if ('launchQueue' in window) { console.log('File Handling API is supported!');
-	launchQueue.setConsumer(launchParams => { handleFiles(launchParams.files); });
-} else { console.error('File Handling API is not supported!'); }
-// PWA handle files }
-
-broadcastChannel.onmessage= (...a) => console.log("ch onmsg", a)
+broadcastChannel.onmessage= (...a) => console.log("ch onmsg", a) //XXX:
 
 export default function Menu({options, value, setValue}) {
 	const options_kv= ensure_kv(options);
@@ -51,10 +36,8 @@ export default function Menu({options, value, setValue}) {
 export function App() {
 	const [menu,setMenu]= useState({});
 
-	// const [view,setView]= useState('generator');
-	const [view,setView]= useState('home'); //TEMP
+	const [view,setView]= useState('home');
 	const [pk,setPk]= useState('')
-
 	const [txt,setTxt]= useState('')
 
 	useEffect(() => {
@@ -68,8 +51,7 @@ export function App() {
 	const onMenuClose= async (menuKey) => {
 		delete menu[menuKey];
 		setMenu(menu);
-		// setView('generator');
-		setView('home'); //TEMP
+		setView('home');
 	}
 
 	const onFileEdit= async (path,fname) => {
@@ -92,6 +74,7 @@ export function App() {
 	let menuViewData= menu[view];
 	return (
 		<div>
+			<Button style={{ position: 'fixed', top: 0, right: 0, zIndex: 9999 }}>M</Button>
 			<div style={{ height: '90vh', overflowY: 'scroll'}}>
 				{ 
 					menuViewData ? (

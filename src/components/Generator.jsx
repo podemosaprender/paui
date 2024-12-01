@@ -18,9 +18,9 @@ const with_log_file= async (fname, onmsg, fn, o, ...args) => {
 }
 
 const CMD_FN= { 
-	forEachProj_tsv: ((onmsg) => with_log_file('ries_log_check.txt', onmsg, forEachProj_tsv)),
-	generate_html: ((onmsg) => with_log_file('ries_log_generate.txt', onmsg, generate_html, this, forEachProj_tsv)),
-	get_tsv: ((onmsg,...a) => with_log_file('ries_log_sync.txt', onmsg, get_tsv, this, ...a)),
+	forEachProj_tsv: ((onmsg) => with_log_file('log/ries/check.txt', onmsg, forEachProj_tsv)),
+	generate_html: ((onmsg) => with_log_file('log/ries/generate.txt', onmsg, generate_html, this, forEachProj_tsv)),
+	get_tsv: ((onmsg,...a) => with_log_file('log/ries/sync.txt', onmsg, get_tsv, this, ...a)),
 	sitio_base: (async (onmsg) => {
 		let links= await get_file_tsv('ries/links.tsv');	
 		let tpl= links.find(r => r[0]=='tpl_proj.html')
@@ -32,17 +32,17 @@ const CMD_FN= {
 	}),
 }
 
-function dispatch_cmd(onmsg, fn,args,data) {
+function dispatch_cmd(onmsg,fn,args,data) {
 	CMD_FN[fn](onmsg, ...args)
 }
 //XXX:API }
 
 //XXX:CFG {
 const CFG_CMD= {
-	base_site: { fn: 'sitio_base', args: [], dsc: 'Sitio base' },
-	sync: { fn: 'get_tsv', args: ['https://docs.google.com/spreadsheets/d/e/2PACX-1vSA4XW7aPv5E7QOpMYk1vYuk_DY3xtbG4TY-oWomKojuaeJh4apwF1PfTx6ElQe7AQIvD0egAH33lWs/pub?gid=1828880156&single=true&output=tsv','ries/'], dsc: 'Traer datos de la planilla Google.' },
-	revisar: { fn: 'forEachProj_tsv', args: [], dsc: 'Revisar consistencia de datos.' },
-	generar_html: { fn: 'generate_html', args: [], dsc: 'Generar HTML' },
+	base_site: { fn: 'sitio_base', args: [], dsc: 'Descargar sitio base.', icon: 'pi-home' },
+	sync: { fn: 'get_tsv', args: ['https://docs.google.com/spreadsheets/d/e/2PACX-1vSA4XW7aPv5E7QOpMYk1vYuk_DY3xtbG4TY-oWomKojuaeJh4apwF1PfTx6ElQe7AQIvD0egAH33lWs/pub?gid=1828880156&single=true&output=tsv','ries/'], dsc: 'Traer datos de la planilla Google.', icon: 'pi-table' },
+	revisar: { fn: 'forEachProj_tsv', args: [], dsc: 'Revisar consistencia de datos.', icon: 'pi-check' },
+	generar_html: { fn: 'generate_html', args: [], dsc: 'Generar HTML.', icon: 'pi-tags' },
 }
 //XXX:CFG }
 
@@ -53,7 +53,7 @@ export function Generator() {
 	return (<div>
 		<ul>
 			{ Object.entries(CFG_CMD).map( ([k,v]) => (
-				<li key={k}><Button icon={"pi "+ (v.icon || "pi-arrow-down")} onClick={() => dispatch_cmd(onMsg, v.fn,v.args,v)} />{ v.dsc }</li>
+				<p key={k}><Button icon={"pi "+ (v.icon || "pi-arrow-down")} label={ v.dsc } onClick={() => { onMsg('Iniciando '+v.dsc); dispatch_cmd(onMsg, v.fn,v.args,v)}} text raised /></p>
 			))}
 		</ul>
 		<div>{ msg }</div>

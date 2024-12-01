@@ -47,15 +47,32 @@ const CFG_CMD= {
 //XXX:CFG }
 
 export function Generator() {
-	const [msg, setMsg]= useState('');
-	const onMsg= useCallback( (t,d) => setMsg((new Date()).toLocaleTimeString()+': '+t) );
+	const [msg, setMsgImpl]= useState([]);
+	const msgRef= useRef()
+	const setMsg= (msg) => {
+		setMsgImpl(msg);
+		msgRef.current= [msg,setMsg];
+	}
+
+	const onMsg= (t,d) => {
+		let [msg,setMsg]= msgRef.current;
+		let msg2=[
+			... msg.slice(msg.length>4 ? msg.length-4 : 0),
+			(new Date()).toLocaleTimeString()+': '+t+(d?.fname ? ' '+d.fname : ''),
+		]
+		console.log(t,msg,msg2);
+		setMsg(msg2)
+	}
 
 	return (<div>
-		<ul>
+		<div>
+			<h1 className="text-primary">BaseRies generador</h1>
+		</div>
+		<div>
 			{ Object.entries(CFG_CMD).map( ([k,v]) => (
-				<p key={k}><Button icon={"pi "+ (v.icon || "pi-arrow-down")} label={ v.dsc } onClick={() => { onMsg('Iniciando '+v.dsc); dispatch_cmd(onMsg, v.fn,v.args,v)}} text raised /></p>
+				<p key={k}><Button icon={"pi "+ (v.icon || "pi-arrow-down")} label={ v.dsc } onClick={() => { setMsg([]); onMsg('Iniciando '+v.dsc); dispatch_cmd(onMsg, v.fn,v.args,v)}} text raised /></p>
 			))}
-		</ul>
-		<div>{ msg }</div>
+		</div>
+		<div className="m-3">{ msg.map((m,i) => (<div key={i}>{m}</div>)) }</div>
 	</div>)
 }

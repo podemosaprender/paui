@@ -53,7 +53,6 @@ export function Editor({fp, value, onChange, onClose}) {
 				view.focus();
 			}} />
 			<Button label="CLOSE" onClick={() => onClose(fp)} />
-			<Button icon="pi pi-arrow-left" label="Volver a vista de formulario" />
 		</div>
 		<div ref={editor} />
 	</div>);

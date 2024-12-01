@@ -58,7 +58,7 @@ export function App() {
 		let fp= path+'/'+(fname||'new.txt')
 		let menuEntry;
 		if (fp.match(/yaml/)) { 
-			let defp='/aa/xyaml/def/def_'+(fp.includes('/pj/') ? 'proyecto' : 'publicacion')+'.yaml';
+			let defp='/aa/xyaml/def/def_'+(fp.includes('/pj/') ? 'proyecto' : 'publicacion')+'.yaml'; //XXX:filetypes
 			menuEntry= {t: 'form',fp, defp, onClose: () => onMenuClose(fp) }
 		} else {
 			let s; try {s = await apic_get_file(fp)}catch(ex){}
@@ -74,7 +74,6 @@ export function App() {
 	let menuViewData= menu[view];
 	return (
 		<div>
-			<Button style={{ position: 'fixed', top: 0, right: 0, zIndex: 9999 }}>M</Button>
 			<div style={{ height: '90vh', overflowY: 'scroll'}}>
 				{ 
 					menuViewData ? (
@@ -82,7 +81,7 @@ export function App() {
 						menuViewData.t=='form' ?  <FormFromSchema fp={menuViewData.fp} defp={menuViewData.defp} onClose={menuViewData.onClose} /> :
 						<h3>Todo { menuViewData.t }</h3>
 					) :
-					view=='home' ? <Home /> :
+					view=='home' ? <Generator /> :
 					view=='editor' ? <Editor value={txt} /> :
 					view=='form' ? <FormFromSchema /> :
 					view=='files' ? <Files onFileEdit={onFileEdit} /> :

@@ -33,8 +33,17 @@ async function on_generate_tsv() {
 }
 
 import { new_zip_model } from 'src/svc/zip';
+
+function minify_html(s) {
+	return s //XXX: pre, js?
+		.replace (/<--!.*?-->/gs,'')
+    .replace(/\>[\r\n\s]+\</g, "> <")
+    .replace(/(<.*?>)|\s+/gs, (m, $1) => $1 ? $1 : ' ')
+    .trim()
+}
+
 export const generate_html= async (forEachProj, on_err) => { //XXX:elegir archivos //XXX:LIB alcanza pasar files
-	const tpl_src= await apic_get_file('tpl_proj.html'); //XXX:CFG
+	const tpl_src= await apic_get_file('ries/tpl_proj.html'); //XXX:CFG
 	const tpl_lol= parseJinjaLike(tpl_src)
 	console.log("TPL_LOL",tpl_lol);
 	const zip= new_zip_model();
@@ -42,8 +51,9 @@ export const generate_html= async (forEachProj, on_err) => { //XXX:elegir archiv
 	await forEachProj( async (p) => {
 		if (true || p.id=="1716") { //XXX:DBG
 			let s= tpl_expand(tpl_lol.all[2],{pj: p});
-			let r= await zip.addFile(new File([s],p.id+''+'.html'));
-			if (i++ % 100==0) console.log(i);
+			//XXX: rompe js s= minify_html(s); 
+			let r= await zip.addFile(new File([s],'c_baseries-main/website/proyectos/index/'+p.id+'.html'));
+			if (i++ % 100==0) on_err("PROGRESO generate_html "+i);
 			return r;
 		}
 	}, on_err);
@@ -54,16 +64,16 @@ export const forEachProj_tsv= async (cb, on_err) => { //XXX:elegir archivos //XX
 	on_err ||= console.log;
 
 	let rels= { //XXX:CFG
-		'proy': {pfx:'ries_'},
-		'pub': {pfx:'ries_'},
-		'personas':{pfx:'ries_'},
-		'clasificaciones':{pfx:'ries_',idCol:'id'},
-		'financiamientos':{},
-		'instituciones':{},
-		'regiones_educativas':{},
-		'tipos_de_productos':{},
-		'cpres':{},
-		'gestion':{},
+		'proy': {pfx:'ries/'},
+		'pub': {pfx:'ries/'},
+		'personas':{pfx:'ries/'},
+		'clasificaciones':{pfx:'ries/',idCol:'id'},
+		'tipos_de_productos':{pfx:'ries/'},
+		'instituciones':{pfx:'ries/'},
+		'financiamientos':{pfx:'ries/'},
+		'regiones_educativas':{pfx:'ries/'},
+		'cpres':{pfx:'ries/'},
+		'gestion':{pfx:'ries/'},
 	}
 
 

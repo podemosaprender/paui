@@ -2,24 +2,24 @@ import { apic_set_file, apic_get_file } from 'src/svc/api'
 import { parse_tsv } from 'src/rte/lib/util';
 
 //XXX:LIB { U: planilla google
-export const get_http= async (url,fp) => { //XXX:mfetch, agregar proxy?
+export const get_http= async (url,fp,on_err) => { //XXX:mfetch, agregar proxy?
+	on_err||=console.log;
+
 	let urlPx= 'https://proxy.o-o.fyi/' + url.replace(/^https?:\/\//,''); //encodeURIComponent(url);
 	let x= await fetch(urlPx).then(r => r.blob())
-	apic_set_file(fp,x);
-	console.log("saved "+fp);
+	await apic_set_file(fp,x);
+	on_err("OK SAVED",{fname: fp, url});
+	return x;
 }
 window.get_http= get_http;
 
-export const url='https://docs.google.com/spreadsheets/d/e/2PACX-1vSA4XW7aPv5E7QOpMYk1vYuk_DY3xtbG4TY-oWomKojuaeJh4apwF1PfTx6ElQe7AQIvD0egAH33lWs/pub?gid=1828880156&single=true&output=tsv' //XXX:CFG
-export const get_tsv= async () => {
-	let x= await fetch(url).then(r => r.text())
-	await apic_set_file('links.tsv',x);
-	console.log("saved links.tsv",x);
+export const get_tsv= async (url,pfx='sync_',on_err) => {
+	let x= await get_http(url, pfx+'links.tsv', on_err).then(b => b.text());
 	let links_data= parse_tsv(x);
-	await Promise.all(links_data.slice(1).map( async r => {
+	on_err("OK LINKS",{fname: pfx+'links.tsv', links_data});
+	await Promise.all(links_data.map( async r => {
 		if (r[0]!='links' && r[1].startsWith('http')) {
-			console.log("download",r);
-			return await get_http(r[1],'ries_'+r[0]);
+			return await get_http(r[1],pfx+r[0],on_err);
 		}
 	}));
 }
